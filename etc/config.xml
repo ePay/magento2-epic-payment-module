@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/config.xsd">
+    <default>
+        <payment>
+            <epayepicpayment>
+                <active>1</active>
+                <model>Epay\Magento2EpicPaymentModule\Model\PaymentMethod</model>
+                <title>ePay EPIC</title>
+                <sort_order>10</sort_order>
+                <payment_action>authorize</payment_action>
+                <is_gateway>1</is_gateway>
+                <order_status>pending</order_status>
+                <payment_action>authorize</payment_action>
+                <can_authorize>1</can_authorize>
+                <can_capture>1</can_capture>
+                <can_use_checkout>1</can_use_checkout>
+            </epayepicpayment>
+        </payment>
+    </default>
+</config>

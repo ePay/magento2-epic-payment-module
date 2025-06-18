@@ -1,0 +1,20 @@
+{
+  "name": "epay/magento2-epic-payment-module",
+  "description": "ePay EPIC payment module for Magento 2",
+  "type": "magento2-module",
+  "version": "4.0.0",
+  "authors": [
+    {
+      "name": "ePay Payment Solutions A/S",
+      "email": "support@epay.dk"
+    }
+  ],
+  "autoload": {
+    "files": [
+        "registration.php"
+    ],
+    "psr-4": {
+      "Epay\\Magento2EpicPaymentModule\\": ""
+    }
+  }
+}
