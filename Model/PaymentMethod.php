@@ -29,8 +29,8 @@ class PaymentMethod extends AbstractMethod
     protected $_isOffline = false;
     protected $_isGateway = true;
     protected $_canAuthorize = true;
-    protected $_canCapture = true;
-    protected $_canCapturePartial = true;
+    protected $_canCapture = false;
+    protected $_canCapturePartial = false;
     protected $_canRefund = true;
     protected $_canRefundInvoicePartial = false;
     protected $_canVoid = true;

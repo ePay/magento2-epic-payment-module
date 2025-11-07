@@ -37,6 +37,10 @@ define([
             return true;
         },
 
+        validate: function () {
+            return this._super() && additionalValidators.validate();
+        },
+
         /*
         selectPaymentMethod: function () {
             selectPaymentMethodAction(this.getData());
