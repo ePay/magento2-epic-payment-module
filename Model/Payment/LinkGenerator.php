@@ -6,6 +6,7 @@ use Epay\Magento2EpicPaymentModule\Model\Payment\EpayHandler;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Exception\LocalizedException;
 
 class LinkGenerator
 {
@@ -52,6 +53,15 @@ class LinkGenerator
         $epayHandler->setAuthData($apikey, $posid);
 
         $result = $epayHandler->createPaymentRequest($order->getIncrementId(), (int)round($order->getGrandTotal() * 100), $order->getOrderCurrencyCode(), "OFF", $acceptUrl, $failureUrl, $notificationUrl);
+
+        if (!is_object($result) || empty($result->paymentWindowUrl)) {
+            $errorMessage = 'Could not create payment link (paymentWindowUrl is missing)';
+            if (is_object($result) && isset($result->errorCode->message)) {
+                $errorMessage .= ' '.$result->errorCode->message;
+            }
+
+            throw new LocalizedException(__($errorMessage));
+        }
 
         return $result->paymentWindowUrl;
     }
