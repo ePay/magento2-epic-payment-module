@@ -25,6 +25,7 @@ use Magento\Payment\Model\InfoInterface;
 class PaymentMethod extends AbstractMethod
 {       
     protected $_code = 'epayepicpayment';
+    protected $_infoBlockType = \Epay\Magento2EpicPaymentModule\Block\Info\Epay::class;
 
     protected $_isOffline = false;
     protected $_isGateway = true;

@@ -7,21 +7,30 @@
                 <label>ePay Payment</label>
                 <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enabled</label>
+                    <comment>Enable ePay Payment Solutions as a payment option.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Title</label>
+                    <comment>The title of the payment method displayed to the customers.</comment>
                 </field>
                 <field id="description" translate="label" type="textarea" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Description</label>
+                    <comment>The description of the payment method displayed to the customers.</comment>
                 </field>
                 <field id="apikey" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>API Key</label>
+                    <comment>Log in to the ePay Backoffice, then go to Developers -> API keys to find the API key.</comment>
                 </field>
                 <field id="posid" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>PointOfSale ID</label>
+                    <comment>Log in to the ePay Backoffice, then go to Payments -> Points of Sale to find the Point of Sale ID.</comment>
                 </field>
-                <field id="instantcapture" type="select" translate="label comment" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="webhookAuth" translate="label" type="text" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Webhook Authorization</label>
+                    <comment>Log in to the ePay Backoffice, then navigate to Payments -> Points of Sale -> Webhook authorization to locate the webhook authorization bearer token.</comment>
+                </field>
+                <field id="instantcapture" type="select" translate="label comment" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Instant capture:</label>
                     <comment>This is used if you wish to capture the payments at the same time as it is authorized. This option may only be used if the cardholder receives the goods at once.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>

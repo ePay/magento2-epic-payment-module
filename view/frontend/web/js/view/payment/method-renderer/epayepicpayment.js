@@ -1,14 +1,18 @@
 define([
     'Magento_Checkout/js/view/payment/default',
+    'Magento_Checkout/js/model/full-screen-loader',
     'Magento_Checkout/js/model/payment/additional-validators',
     'Magento_Checkout/js/action/select-payment-method',
     'Magento_Checkout/js/model/quote',
+    'Magento_Checkout/js/model/messageList',
     'ko'
 ], function (
     Component,
+    fullScreenLoader,
     additionalValidators,
     selectPaymentMethodAction,
     quote,
+    globalMessageList,
     ko
 ) {
     'use strict';
@@ -21,10 +25,6 @@ define([
 
         redirectAfterPlaceOrder: false,
 
-        afterPlaceOrder: function () {
-            window.location.replace(this.getRedirectUrl());
-        },
-
         getDescription: function () {
                 return window.checkoutConfig.payment[this.getCode()].description;
         },
@@ -36,47 +36,27 @@ define([
         isActive: function () {
             return true;
         },
-
-        validate: function () {
-            return this._super() && additionalValidators.validate();
-        },
-
-        /*
         selectPaymentMethod: function () {
             selectPaymentMethodAction(this.getData());
             return true;
         },
-        */
-
-        getRedirectUrl: function () {
-            return window.checkoutConfig.payment[this.getCode()].redirectUrl;
+        validate: function () {
+            return this._super() && additionalValidators.validate();
         },
+        afterPlaceOrder: function () {
 
-        placeOrder: function (data, event) {
-            var self = this;
+            fullScreenLoader.startLoader();
 
-            if (event) {
-                event.preventDefault();
+            var cfg = window.checkoutConfig.payment[this.getCode()] || {};
+            var redirectUrl = cfg.redirectUrl;
+
+            if (!redirectUrl) {
+                fullScreenLoader.stopLoader();
+                this.messageContainer.addErrorMessage({message: 'Redirect URL mangler (redirectUrl).'});
+                return;
             }
 
-            if (this.validate() && additionalValidators.validate()) {
-                
-                this.isPlaceOrderActionAllowed(false);
-
-                selectPaymentMethodAction(this.getData());
-
-                var redirectUrl = window.checkoutConfig.payment[this.getCode()].redirectUrl;
-
-                this.getPlaceOrderDeferredObject().done(function() {
-                    window.location.replace(redirectUrl);
-                }).fail(function() {
-                    self.isPlaceOrderActionAllowed(true);
-                });
-
-                return true;
-            }
-
-            return false;
+            window.location.replace(redirectUrl);
         }
     });
 });

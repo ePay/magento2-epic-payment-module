@@ -1,0 +1,34 @@
+<?php /** @var \Epay\Magento2EpicPaymentModule\Block\Info\Epay $block */ ?>
+<?php $paymentMethodDisplayText = $block->getPaymentMethodDisplayText(); ?>
+<?php $paymentType = $block->getPaymentType(); ?>
+<?php $cardNumber = $block->getCardNumber(); ?>
+<?php $transactionId = $block->getTransactionId(); ?>
+
+<table class="data-table admin__table-secondary">
+    <tbody>
+    <?php if ($paymentMethodDisplayText): ?>
+        <tr>
+            <th><?= $block->escapeHtml(__('Payment Method')) ?></th>
+            <td><?= $block->escapeHtml($paymentMethodDisplayText) ?></td>
+        </tr>
+    <?php endif; ?>
+    <?php if ($paymentType): ?>
+        <tr>
+            <th><?= $block->escapeHtml(__('Payment Type')) ?></th>
+            <td><?= $block->escapeHtml($paymentType) ?></td>
+        </tr>
+    <?php endif; ?>
+    <?php if ($cardNumber): ?>
+        <tr>
+            <th><?= $block->escapeHtml(__('Card Number')) ?></th>
+            <td><?= $block->escapeHtml($cardNumber) ?></td>
+        </tr>
+    <?php endif; ?>
+    <?php if ($transactionId): ?>
+        <tr>
+            <th><?= $block->escapeHtml(__('Transaction ID')) ?></th>
+            <td><?= $block->escapeHtml($transactionId) ?></td>
+        </tr>
+    <?php endif; ?>
+    </tbody>
+</table>
