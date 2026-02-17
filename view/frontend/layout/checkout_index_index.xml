@@ -20,7 +20,7 @@
                                                                     <item name="children" xsi:type="array">
                                                                         <item name="agreements" xsi:type="array">
                                                                             <item name="component" xsi:type="string">
-                                                                                Magento_CheckoutAgreements/js/view/checkout/agreements
+                                                                                Magento_CheckoutAgreements/js/view/checkout-agreements
                                                                             </item>
                                                                             <item name="displayArea" xsi:type="string">before-place-order</item>
                                                                             <item name="sortOrder" xsi:type="number">100</item>

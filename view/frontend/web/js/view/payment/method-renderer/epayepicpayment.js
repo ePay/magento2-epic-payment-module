@@ -4,7 +4,7 @@ define([
     'Magento_Checkout/js/model/payment/additional-validators',
     'Magento_Checkout/js/action/select-payment-method',
     'Magento_Checkout/js/model/quote',
-    'Magento_Checkout/js/model/messageList',
+    'Magento_Ui/js/model/messageList',
     'ko'
 ], function (
     Component,
