@@ -73,45 +73,81 @@ class Callback extends Action implements CsrfAwareActionInterface
 
         $this->logger->info('ePay callback modtaget', ['data' => $rawBodyJson]);
 
-        $responseBody = ['success' => true];
+        $responseBody = [
+            'success' => true,
+            'message' => 'Callback received'
+        ];
 
         try {
-            if (!empty($postData['transaction']['reference'])) {
-                $order = $this->orderRepository->get($postData['transaction']['reference']);
-                $payment = $order->getPayment();
+            $reference = $postData['transaction']['reference'] ?? '';
+            $transactionId = $postData['transaction']['id'] ?? null;
+            $state = $postData['transaction']['state'] ?? null;
 
-                $payment->setTransactionId($postData['transaction']['id'] ?? null)
-                    ->setIsTransactionClosed(false)
-                    ->addTransaction(\Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH);
-
-                $payment->setCcType($postData['transaction']['paymentMethodSubType'] ?? null);
-                $payment->setCcNumberEnc($postData['transaction']['paymentMethodDisplayText'] ?? null);
-                $payment->setAdditionalInformation('epay_callback', $rawBodyJson);
-                $payment->save();
-
-                if (($postData['transaction']['state'] ?? '') === 'SUCCESS') {
-                    $order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING)
-                        ->setStatus(\Magento\Sales\Model\Order::STATE_PROCESSING);
-
-                    $this->orderRepository->save($order);
-
-                    if (!$order->getEmailSent()) {
-                        try {
-                            $order->setSendEmail(true);
-                            $order->setCanSendNewEmailFlag(true);
-                            $this->orderSender->send($order, true);
-                        } catch (\Exception $e) {
-                            $this->logger->error('Fejl ved afsendelse af ordrebekræftelse', [
-                                'exception' => $e->getMessage(),
-                                'order_id'  => $order->getEntityId()
-                            ]);
-                        }
-                    }
-                }
-            } else {
+            if ($reference === '') {
                 $this->logger->warning('ePay callback modtaget uden orderid', ['data' => $rawBodyJson]);
                 $responseBody = ['success' => false, 'message' => 'Missing order reference'];
+
+                return $this->getResponse()
+                    ->setHeader('Content-Type', 'application/json', true)
+                    ->setHeader('X-EPay-System', $this->epayPaymentHelper->getModuleHeaderInfo(), true)
+                    ->setStatusCode(200)
+                    ->setBody(json_encode($responseBody));
             }
+
+            $order = $this->orderRepository->get($reference);
+
+            $payment = $order->getPayment();
+            $payment->setTransactionId($transactionId)
+                ->setIsTransactionClosed(false)
+                ->addTransaction(\Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH);
+
+            $payment->setCcType($postData['transaction']['paymentMethodSubType'] ?? null);
+            $payment->setCcNumberEnc($postData['transaction']['paymentMethodDisplayText'] ?? null);
+            $payment->setAdditionalInformation('epay_callback', $rawBodyJson);
+            $payment->save();
+
+            $responseBody = [
+                'success' => true,
+                'message' => 'Payment updated from callback',
+                'reference' => (string) $reference,
+                'transactionId' => $transactionId,
+                'state' => $state
+            ];
+
+            if ($state === 'SUCCESS') {
+                $order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING)
+                    ->setStatus(\Magento\Sales\Model\Order::STATE_PROCESSING);
+
+                $this->orderRepository->save($order);
+
+                $responseBody['message'] = 'Order set to processing';
+                $responseBody['orderStateChanged'] = true;
+
+                if (!$order->getEmailSent()) {
+                    try {
+                        $order->setSendEmail(true);
+                        $order->setCanSendNewEmailFlag(true);
+                        $this->orderSender->send($order, true);
+
+                        $responseBody['email'] = 'sent';
+                    } catch (\Exception $e) {
+                        $this->logger->error('Fejl ved afsendelse af ordrebekræftelse', [
+                            'exception' => $e->getMessage(),
+                            'order_id'  => $order->getEntityId()
+                        ]);
+
+                        $responseBody['email'] = 'failed';
+                        $responseBody['emailError'] = $e->getMessage();
+                        $responseBody['message'] = 'Order set to processing (email failed)';
+                    }
+                } else {
+                    $responseBody['email'] = 'already_sent';
+                }
+            } else {
+                $responseBody['orderStateChanged'] = false;
+                $responseBody['message'] = 'Payment updated (no order state change)';
+            }
+
         } catch (\Exception $e) {
             $this->logger->error('Fejl ved behandling af ePay callback', [
                 'exception' => $e->getMessage(),
