@@ -55,13 +55,37 @@ class LinkGenerator
         $result = $epayHandler->createPaymentRequest($order->getIncrementId(), (int)round($order->getGrandTotal() * 100), $order->getOrderCurrencyCode(), "OFF", $acceptUrl, $failureUrl, $notificationUrl);
 
         if (!is_object($result) || empty($result->paymentWindowUrl)) {
-            $errorMessage = 'Could not create payment link (paymentWindowUrl is missing)';
-            if (is_object($result) && isset($result->errorCode->message)) {
-                $errorMessage .= ' '.$result->errorCode->message;
+
+            $errorMessage = 'Could not create payment link';
+
+            if (is_object($result)) {
+
+                // Append general error message if available
+                if (!empty($result->message)) {
+                    $errorMessage .= ': ' . $result->message;
+                }
+
+                // Append error code if available
+                if (!empty($result->errorCode)) {
+                    $errorMessage .= ' (' . $result->errorCode . ')';
+                }
+
+                // Append detailed validation errors if present
+                if (!empty($result->errors) && is_object($result->errors)) {
+                    foreach ($result->errors as $field => $messages) {
+                        if (is_array($messages)) {
+                            foreach ($messages as $msg) {
+                                $errorMessage .= "\n" . $field . ': ' . $msg;
+                            }
+                        }
+                    }
+                }
             }
 
             throw new LocalizedException(__($errorMessage));
         }
+
+
 
         return $result->paymentWindowUrl;
     }
