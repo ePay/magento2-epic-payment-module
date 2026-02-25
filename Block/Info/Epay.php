@@ -11,7 +11,22 @@ class Epay extends Info
 
     public function getPaymentType(): ?string
     {
-        return $this->getInfo()->getCcType();
+        $info = $this->getInfo();
+        if (!$info) {
+            return null;
+        }
+
+        $ccType = trim((string)$info->getCcType());
+        if ($ccType !== '') {
+            return $ccType;
+        }
+
+        $subtype = trim((string)$info->getAdditionalInformation('epay_payment_subtype'));
+        if ($subtype !== '') {
+            return $subtype;
+        }
+
+        return null;
     }
 
     public function getPaymentMethodDisplayText(): ?string
@@ -23,7 +38,22 @@ class Epay extends Info
 
     public function getCardNumber(): ?string
     {
-        return $this->getInfo()->getCcNumberEnc();
+        $info = $this->getInfo();
+        if (!$info) {
+            return null;
+        }
+
+        $ccNumber = $info->getCcNumberEnc();
+        if (!empty($ccNumber)) {
+            return $ccNumber;
+        }
+
+        $alt = $info->getAdditionalInformation('epay_payment_cardnumber');
+        if (!empty($alt)) {
+            return $alt;
+        }
+
+        return null;
     }
 
     public function getTransactionId(): ?string

@@ -32,10 +32,12 @@ class Accept extends Action
 
         $order = $this->orderRepository->get($orderId);
 
+        /*
         $payment = $order->getPayment();
         $pspData = $this->getRequest()->getParams();
         $payment->setAdditionalInformation('epay_response', json_encode($pspData));
         $payment->save();
+        */
 
         return $this->_redirect('checkout/onepage/success');
     }

@@ -94,18 +94,6 @@ class Callback extends Action implements CsrfAwareActionInterface
                     ->setBody(json_encode($responseBody));
             }
 
-            $order = $this->orderRepository->get($reference);
-
-            $payment = $order->getPayment();
-            $payment->setTransactionId($transactionId)
-                ->setIsTransactionClosed(false)
-                ->addTransaction(\Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH);
-
-            $payment->setCcType($postData['transaction']['paymentMethodSubType'] ?? null);
-            $payment->setCcNumberEnc($postData['transaction']['paymentMethodDisplayText'] ?? null);
-            $payment->setAdditionalInformation('epay_callback', $rawBodyJson);
-            $payment->save();
-
             $responseBody = [
                 'success' => true,
                 'message' => 'Payment updated from callback',
@@ -115,6 +103,35 @@ class Callback extends Action implements CsrfAwareActionInterface
             ];
 
             if ($state === 'SUCCESS') {
+
+                $order = $this->orderRepository->get($reference);
+                $payment = $order->getPayment();
+                $amount  = (float)$order->getBaseGrandTotal();
+
+                if ($transactionId && (string)$payment->getLastTransId() !== (string)$transactionId) {
+                    $payment->setTransactionId($transactionId);
+                    $payment->registerAuthorizationNotification($amount);
+                    $payment->setIsTransactionClosed(false);
+                }
+
+                /*
+                $payment->setTransactionId($transactionId)
+                    ->setIsTransactionClosed(false)
+                    ->addTransaction(\Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH);
+                */
+
+                $payment->setCcType($postData['transaction']['paymentMethodSubType'] ?? null);
+                $payment->setCcNumberEnc($postData['transaction']['paymentMethodDisplayText'] ?? null);
+
+                $payment->setAdditionalInformation('epay_payment_cardnumber', $postData['transaction']['paymentMethodDisplayText'] ?? null);
+                $payment->setAdditionalInformation('epay_payment_subtype', $postData['transaction']['paymentMethodSubType'] ?? null);
+                $payment->setAdditionalInformation('epay_payment_expiry', $postData['transaction']['paymentMethodExpiry'] ?? null);
+                $payment->setAdditionalInformation('epay_payment_type', $postData['transaction']['paymentMethodType'] ?? null);
+                $payment->setAdditionalInformation('epay_payment_posid', $postData['transaction']['pointOfSaleId'] ?? null);
+                $payment->setAdditionalInformation('epay_payment_id', $postData['transaction']['id'] ?? null);
+
+                // $payment->setAdditionalInformation('epay_callback', $rawBodyJson);
+
                 $order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING)
                     ->setStatus(\Magento\Sales\Model\Order::STATE_PROCESSING);
 
