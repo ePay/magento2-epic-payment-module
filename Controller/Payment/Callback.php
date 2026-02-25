@@ -123,13 +123,21 @@ class Callback extends Action implements CsrfAwareActionInterface
                 $responseBody['message'] = 'Order set to processing';
                 $responseBody['orderStateChanged'] = true;
 
-                if (!$order->getEmailSent()) {
-                    try {
-                        $order->setSendEmail(true);
-                        $order->setCanSendNewEmailFlag(true);
-                        $this->orderSender->send($order, true);
+                $emailSent = (int)$order->getData('email_sent');
 
-                        $responseBody['email'] = 'sent';
+                // if (!$order->getEmailSent()) {
+                if ($emailSent !== 1) {
+
+                    $order->setSendEmail(true);
+                    $order->setCanSendNewEmailFlag(true);
+
+                    try {
+                        $sent = (bool)$this->orderSender->send($order, true);
+                        if ($sent) {
+                            $responseBody['email'] = 'sent';
+                        } else {
+                            $responseBody['email'] = 'not_sent';
+                        }
                     } catch (\Exception $e) {
                         $this->logger->error('Fejl ved afsendelse af ordrebekræftelse', [
                             'exception' => $e->getMessage(),
