@@ -6,6 +6,8 @@ use Epay\Magento2EpicPaymentModule\Helper\EpayPaymentHelper;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\CsrfAwareActionInterface;
+use Magento\Framework\Api\SearchCriteriaBuilderFactory;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Checkout\Model\Session as CheckoutSession;
@@ -24,6 +26,7 @@ class Callback extends Action implements CsrfAwareActionInterface
     private LoggerInterface $logger;
     private EpayPaymentHelper $epayPaymentHelper;
     private ScopeConfigInterface $scopeConfig;
+    private SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory;
 
     public function __construct(
         Context $context,
@@ -33,6 +36,7 @@ class Callback extends Action implements CsrfAwareActionInterface
         LoggerInterface $logger,
         EpayPaymentHelper $epayPaymentHelper,
         ScopeConfigInterface $scopeConfig,
+        SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory,
     ) {
         parent::__construct($context);
         $this->checkoutSession = $checkoutSession;
@@ -41,6 +45,7 @@ class Callback extends Action implements CsrfAwareActionInterface
         $this->logger = $logger;
         $this->epayPaymentHelper = $epayPaymentHelper;
         $this->scopeConfig = $scopeConfig;
+        $this->searchCriteriaBuilderFactory = $searchCriteriaBuilderFactory;
     }
 
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
@@ -103,8 +108,7 @@ class Callback extends Action implements CsrfAwareActionInterface
             ];
 
             if ($state === 'SUCCESS') {
-
-                $order = $this->orderRepository->get($reference);
+                $order = $this->getOrderByIncrementId((string)$reference);
                 $payment = $order->getPayment();
                 $amount  = (float)$order->getBaseGrandTotal();
 
@@ -230,6 +234,23 @@ class Callback extends Action implements CsrfAwareActionInterface
         }
 
         return null;
+    }
+
+    private function getOrderByIncrementId(string $incrementId): \Magento\Sales\Api\Data\OrderInterface
+    {
+        $searchCriteria = $this->searchCriteriaBuilderFactory->create()
+            ->addFilter('increment_id', $incrementId, 'eq')
+            ->setPageSize(1)
+            ->setCurrentPage(1)
+            ->create();
+        $orders = $this->orderRepository->getList($searchCriteria)->getItems();
+        $order = reset($orders);
+
+        if (!$order) {
+            throw new NoSuchEntityException(__('Order with increment_id "%1" was not found.', $incrementId));
+        }
+
+        return $order;
     }
 
 }
