@@ -29,11 +29,11 @@ class PaymentMethod extends AbstractMethod
 
     protected $_isOffline = false;
     protected $_isGateway = true;
-    protected $_canAuthorize = true;
-    protected $_canCapture = false;
-    protected $_canCapturePartial = false;
+    // protected $_canAuthorize = true;
+    protected $_canCapture = true;
+    protected $_canCapturePartial = true;
     protected $_canRefund = true;
-    protected $_canRefundInvoicePartial = false;
+    protected $_canRefundInvoicePartial = true;
     protected $_canVoid = true;
     // protected $_canUseInternal = true; // false
     protected $_canUseCheckout = true;
@@ -43,7 +43,7 @@ class PaymentMethod extends AbstractMethod
     // protected $_canManageRecurringProfiles = false;
 
     private EpayHandler $epayHandler;
-    private $psrLogger;
+    private LoggerInterface $psrLogger;
     protected $_isInitializeNeeded = true;
     private ScopeConfigInterface $scopeConfig;
 
@@ -83,7 +83,7 @@ class PaymentMethod extends AbstractMethod
         
         $this->epayHandler = $epayHandler;
         $this->epayHandler->setAuthData($apikey);
-        $this->logger   = $psrLogger;
+        $this->psrLogger = $psrLogger;
     }
 
     public function initialize($paymentAction, $stateObject)
@@ -91,6 +91,8 @@ class PaymentMethod extends AbstractMethod
         $stateObject->setState(\Magento\Sales\Model\Order::STATE_PENDING_PAYMENT);
         $stateObject->setStatus(\Magento\Sales\Model\Order::STATE_PENDING_PAYMENT);
         $stateObject->setIsNotified(false);
+
+        return $this;
     }
 
     /**
@@ -100,10 +102,10 @@ class PaymentMethod extends AbstractMethod
      * @param float         $amount
      * @return $this
      */
-    public function authorize(InfoInterface $payment, $amount)
+    public function authorize(InfoInterface $payment, $amount): self
     {
 
-        $this->logger->info('Start authorize ', ['Result' => true]);
+        $this->psrLogger->info('Start authorize ', ['Result' => true]);
         // $payment->setTransactionId('1234'.rand(1000, 9999));
         // $payment->setIsTransactionClosed(false);
         return $this;
@@ -141,7 +143,7 @@ class PaymentMethod extends AbstractMethod
         $order    = $payment->getOrder();
         $lastTxId = $payment->getLastTransId();
 
-        $this->logger->error('Starter refund', [
+        $this->psrLogger->error('Starter refund', [
             'order'         => $order->getIncrementId(),
             'amount'        => $amount,
             'parent_tx_id'  => $lastTxId,
@@ -150,31 +152,19 @@ class PaymentMethod extends AbstractMethod
         try {
             $refundResult = $this->epayHandler->refund($lastTxId, $this->convertAmountToMinorunits($amount));
 
-            /*
-            if (!$response->isSuccess()) {
-                $this->logger->error('Refund fejlede', [
-                    'error'     => $response->getErrorMessage(),
-                    'response'  => $response->getData()
-                ]);
-                throw new LocalizedException(
-                    __('Refund mislykkedes: %1', $response->getErrorMessage())
-                );
-            }
-            */
-
             $payment->setTransactionId($lastTxId)
                     ->setParentTransactionId($lastTxId)
                     ->setIsTransactionClosed(1)
-                    ->addTransaction(PaymentTransaction::TYPE_CAPTURE);
+                    ->addTransaction(PaymentTransaction::TYPE_REFUND);
 
             $payment->registerRefundNotification($amount);
 
-            $this->logger->info('Refund completed', [
+            $this->psrLogger->info('Refund completed', [
                 'amount' => $amount,
                 'refund_tx_id' => $lastTxId
             ]);
         } catch (\Throwable $e) {
-            $this->logger->critical('Exception under refund', ['exception' => $e->getMessage()]);
+            $this->psrLogger->critical('Exception under refund', ['exception' => $e->getMessage()]);
             throw $e;
         }
 
@@ -202,22 +192,10 @@ class PaymentMethod extends AbstractMethod
     public function void(InfoInterface $payment): self
     {
         $lastTxId = $payment->getLastTransId();
-        $this->logger->info('Void start', ['transaction_id' => $lastTxId]);
+        $this->psrLogger->info('Void start', ['transaction_id' => $lastTxId]);
 
         $voidResult = $this->epayHandler->void($lastTxId, -1);
         
-        /*
-        if (!$response->isSuccess()) {
-            $this->psrLogger->error('Void failed', [
-                'transaction_id' => $lastTxId,
-                'error'          => $response->getErrorMessage(),
-            ]);
-            throw new \Magento\Framework\Exception\LocalizedException(
-                __('Void failed: %1', $response->getErrorMessage())
-            );
-        }
-        */
-
         $payment->setTransactionId($lastTxId)
                 ->setParentTransactionId($lastTxId)
                 ->setIsTransactionClosed(1)
@@ -236,15 +214,11 @@ class PaymentMethod extends AbstractMethod
 
     public function isAvailable(\Magento\Quote\Api\Data\CartInterface $quote = null)
     {
-        $logger = \Magento\Framework\App\ObjectManager::getInstance()->get(\Psr\Log\LoggerInterface::class);
-        $logger->info('VENDOR_PAYMENT isAvailable CALLED');
-
-        // return parent::isAvailable($quote); // eller return true for test
-        return true;
+        return parent::isAvailable($quote);
     }
 
-    private function convertAmountToMinorunits($amount)
+    private function convertAmountToMinorunits($amount): int
     {
-        return round($amount*100);
+        return (int) round(((float)$amount) * 100);
     }
 }

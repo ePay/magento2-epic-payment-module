@@ -36,7 +36,7 @@ class Callback extends Action implements CsrfAwareActionInterface
         LoggerInterface $logger,
         EpayPaymentHelper $epayPaymentHelper,
         ScopeConfigInterface $scopeConfig,
-        SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory,
+        SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory
     ) {
         parent::__construct($context);
         $this->checkoutSession = $checkoutSession;
@@ -110,19 +110,15 @@ class Callback extends Action implements CsrfAwareActionInterface
             if ($state === 'SUCCESS') {
                 $order = $this->getOrderByIncrementId((string)$reference);
                 $payment = $order->getPayment();
-                $amount  = (float)$order->getBaseGrandTotal();
+                $amount  = (float)$order->getGrandTotal();
 
                 if ($transactionId && (string)$payment->getLastTransId() !== (string)$transactionId) {
                     $payment->setTransactionId($transactionId);
-                    $payment->registerAuthorizationNotification($amount);
+                    $payment->setLastTransId($transactionId);
                     $payment->setIsTransactionClosed(false);
+                    $payment->setShouldCloseParentTransaction(false);
+                    $payment->registerAuthorizationNotification($amount);
                 }
-
-                /*
-                $payment->setTransactionId($transactionId)
-                    ->setIsTransactionClosed(false)
-                    ->addTransaction(\Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH);
-                */
 
                 $payment->setCcType($postData['transaction']['paymentMethodSubType'] ?? null);
                 $payment->setCcNumberEnc($postData['transaction']['paymentMethodDisplayText'] ?? null);
@@ -146,7 +142,6 @@ class Callback extends Action implements CsrfAwareActionInterface
 
                 $emailSent = (int)$order->getData('email_sent');
 
-                // if (!$order->getEmailSent()) {
                 if ($emailSent !== 1) {
 
                     $order->setSendEmail(true);
@@ -206,6 +201,10 @@ class Callback extends Action implements CsrfAwareActionInterface
 
         if ($expectedToken === '') {
             return null;
+        }
+
+        if (stripos($expectedToken, 'Bearer ') === 0) {
+            $expectedToken = trim(substr($expectedToken, 7));
         }
 
         $authHeader =
