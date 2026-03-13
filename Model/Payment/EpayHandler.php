@@ -1,16 +1,19 @@
 <?php
 namespace Epay\Magento2EpicPaymentModule\Model\Payment;
 
+use Epay\Magento2EpicPaymentModule\Helper\EpayPaymentHelper;
+
 class EpayHandler {
 
     private $epay_apikey;
     private $epay_pos;
     private $base_url;
-    private $urlBuilder;
+    private EpayPaymentHelper $epayPaymentHelper;
 
-    public function __construct()
+    public function __construct(EpayPaymentHelper $epayPaymentHelper)
     {
         $this->base_url = "https://payments.epay.eu";
+        $this->epayPaymentHelper = $epayPaymentHelper;
     }
 
     public function setAuthData($apikey, $posid=null)
@@ -19,7 +22,7 @@ class EpayHandler {
         $this->epay_pos = $posid;
     }
 
-    public function createPaymentRequest($orderId, $amountMinorUnits, $currency, $instantCapture, $successUrl, $failureUrl=null, $notificationUrl=null)
+    public function createPaymentRequest($orderId, $amountMinorUnits, $currency, $instantCapture, $successUrl, $failureUrl=null, $notificationUrl=null, $ageVerificationMinimumAge=null, $ageVerificationCountry=null, $customerId=null)
     {
         $ePayParameters = array(
             "reference" => $orderId,
@@ -34,6 +37,17 @@ class EpayHandler {
             "successUrl" => $successUrl,
             "failureUrl" => $failureUrl
         );
+
+        if(isset($ageVerificationMinimumAge) && $ageVerificationMinimumAge > 0)
+        {
+            $ePayParameters['ageVerification']['minimumAge'] = intval($ageVerificationMinimumAge);
+            $ePayParameters['ageVerification']['country'] = $ageVerificationCountry;
+        }
+
+        if($customerId != null)
+        {
+            $ePayParameters['customerId'] = $customerId;
+        }
         
         $endpoint_URL = $this->base_url."/public/api/v1/cit";
         $result = $this->post($endpoint_URL, $ePayParameters);
@@ -140,11 +154,11 @@ class EpayHandler {
 
         $ch = curl_init($endpoint_URL);
 
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/json', 
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
             'Authorization: Bearer ' . $this->epay_apikey,
-            'Content-Length: ' . strlen($jsonData)
-        ));
+            'X-EPay-System: ' . $this->epayPaymentHelper->getModuleHeaderInfo(),
+        ]);
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -154,12 +168,9 @@ class EpayHandler {
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if($http_code == "200")
-        {
+        if ($http_code == 200) {
             return $result;
-        }
-        else
-        {
+        } else {
             return $result;
         }
     }
@@ -168,10 +179,11 @@ class EpayHandler {
     {
         $ch = curl_init($endpoint_URL);
 
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/json', 
-            'Authorization: Bearer ' . $this->epay_apikey
-        ));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $this->epay_apikey,
+            'X-EPay-System: ' . $this->epayPaymentHelper->getModuleHeaderInfo(),
+        ]);
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         
@@ -194,10 +206,11 @@ class EpayHandler {
     {
         $ch = curl_init($endpoint_URL);
 
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/json', 
-            'Authorization: Bearer ' . $this->epay_apikey
-        ));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $this->epay_apikey,
+            'X-EPay-System: ' . $this->epayPaymentHelper->getModuleHeaderInfo(),
+        ]);
 
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

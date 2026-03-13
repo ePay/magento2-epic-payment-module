@@ -19,6 +19,7 @@ use Magento\Payment\Model\Method\AbstractMethod;
 use Psr\Log\LoggerInterface;
 use Magento\Sales\Model\Order\Payment\Transaction as PaymentTransaction;
 use Epay\Magento2EpicPaymentModule\Model\Payment\EpayHandler;
+use Magento\Quote\Api\Data\CartInterface;
 
 use Magento\Payment\Model\InfoInterface;
 
@@ -212,7 +213,7 @@ class PaymentMethod extends AbstractMethod
     }
     */
 
-    public function isAvailable(\Magento\Quote\Api\Data\CartInterface $quote = null)
+    public function isAvailable(?CartInterface $quote = null)
     {
         return parent::isAvailable($quote);
     }
