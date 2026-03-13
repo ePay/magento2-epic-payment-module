@@ -1,26 +1,32 @@
 <?php
 namespace Epay\Magento2EpicPaymentModule\Model\Payment;
 
-use Magento\Sales\Api\Data\OrderInterface;
 use Epay\Magento2EpicPaymentModule\Model\Payment\EpayHandler;
-use Magento\Framework\UrlInterface;
-use Magento\Store\Model\ScopeInterface;
+use Magento\Catalog\Model\CategoryFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\UrlInterface;
+use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Store\Model\ScopeInterface;
 
 class LinkGenerator
 {
-    private $urlBuilder;
+    private UrlInterface $urlBuilder;
     private ScopeConfigInterface $scopeConfig;
+    private CategoryFactory $categoryFactory;
+    private EpayHandler $epayHandler;
 
     public function __construct(
         UrlInterface $urlBuilder,
-        ScopeConfigInterface $scopeConfig
-    )
-    {
+        ScopeConfigInterface $scopeConfig,
+        CategoryFactory $categoryFactory,
+        EpayHandler $epayHandler
+    ) {
         $this->urlBuilder = $urlBuilder;
-        $this->scopeConfig  = $scopeConfig;
-    } 
+        $this->scopeConfig = $scopeConfig;
+        $this->categoryFactory = $categoryFactory;
+        $this->epayHandler = $epayHandler;
+    }
 
     public function generateLink(OrderInterface $order): string
     {
@@ -28,7 +34,7 @@ class LinkGenerator
             'epay/payment/accept',
             ['_secure' => true]
         );
-        
+
         $failureUrl = $this->urlBuilder->getUrl(
             'epay/payment/cancel',
             ['_secure' => true]
@@ -39,38 +45,100 @@ class LinkGenerator
             ['_secure' => true]
         );
 
+        $storeId = (int)$order->getStoreId();
+
         $apikey = $this->scopeConfig->getValue(
             'payment/epayepicpayment/apikey',
-            ScopeInterface::SCOPE_STORE
+            ScopeInterface::SCOPE_STORE,
+            $storeId
         );
-        
+
         $posid = $this->scopeConfig->getValue(
             'payment/epayepicpayment/posid',
-            ScopeInterface::SCOPE_STORE
+            ScopeInterface::SCOPE_STORE,
+            $storeId
         );
 
-        $epayHandler = new EpayHandler;
-        $epayHandler->setAuthData($apikey, $posid);
+        $ageVerificationMode = $this->scopeConfig->getValue(
+            'payment/epayepicpayment/ageverificationmode',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
 
-        $result = $epayHandler->createPaymentRequest($order->getIncrementId(), (int)round($order->getGrandTotal() * 100), $order->getOrderCurrencyCode(), "OFF", $acceptUrl, $failureUrl, $notificationUrl);
+        $customerId = null;
+        $ageVerificationMinimumAge = null;
+        $ageVerificationCountry = null;
+
+        $countryId = $order->getShippingAddress()?->getCountryId();
+
+        if (
+            $ageVerificationMode === 'ageverification_enabled_all'
+            || ($ageVerificationMode === 'ageverification_enabled_dk' && $countryId === 'DK')
+        ) {
+            $minimumuserage = 0;
+            $orderItems = $order->getAllVisibleItems();
+
+            if ($orderItems) {
+                foreach ($orderItems as $item) {
+                    $product_minimumuserage = (int)$item->getProduct()->getData('ageVerification');
+
+                    $category_minimumuserage = 0;
+                    $categoryIds = (array)$item->getProduct()->getCategoryIds();
+
+                    foreach ($categoryIds as $categoryId) {
+                        $category = $this->categoryFactory->create()->load((int)$categoryId);
+
+                        $category_minimumuserage = max(
+                            $category_minimumuserage,
+                            (int)$category->getData('ageVerification')
+                        );
+                    }
+
+                    $minimumuserage = max(
+                        (int)$minimumuserage,
+                        (int)$product_minimumuserage,
+                        (int)$category_minimumuserage
+                    );
+                }
+            }
+
+            if ($minimumuserage > 0) {
+                $ageVerificationMinimumAge = $minimumuserage;
+                $ageVerificationCountry = $countryId;
+
+                if (!$order->getCustomerIsGuest()) {
+                    $customerId = $order->getCustomerId();
+                }
+            }
+        }
+
+        $this->epayHandler->setAuthData($apikey, $posid);
+
+        $result = $this->epayHandler->createPaymentRequest(
+            $order->getIncrementId(),
+            (int)round((float)$order->getGrandTotal() * 100),
+            $order->getOrderCurrencyCode(),
+            'OFF',
+            $acceptUrl,
+            $failureUrl,
+            $notificationUrl,
+            $ageVerificationMinimumAge,
+            $ageVerificationCountry,
+            $customerId
+        );
 
         if (!is_object($result) || empty($result->paymentWindowUrl)) {
-
             $errorMessage = 'Could not create payment link';
 
             if (is_object($result)) {
-
-                // Append general error message if available
                 if (!empty($result->message)) {
                     $errorMessage .= ': ' . $result->message;
                 }
 
-                // Append error code if available
                 if (!empty($result->errorCode)) {
                     $errorMessage .= ' (' . $result->errorCode . ')';
                 }
 
-                // Append detailed validation errors if present
                 if (!empty($result->errors) && is_object($result->errors)) {
                     foreach ($result->errors as $field => $messages) {
                         if (is_array($messages)) {
@@ -85,8 +153,6 @@ class LinkGenerator
             throw new LocalizedException(__($errorMessage));
         }
 
-
-
-        return $result->paymentWindowUrl;
+        return (string)$result->paymentWindowUrl;
     }
 }
