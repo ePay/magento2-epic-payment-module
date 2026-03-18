@@ -35,12 +35,17 @@
                     <comment>This is used if you wish to capture the payments at the same time as it is authorized. This option may only be used if the cardholder receives the goods at once.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="order_status_after_cancel_payment" type="select" translate="label comment" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="enableinvoicedata" type="select" translate="label comment" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable invoice data:</label>
+                    <comment>Collect invoice data and send to the payment window</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="order_status_after_cancel_payment" type="select" translate="label comment" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Order Status After Canceled Payment:</label>
                     <comment>The order status after payment is canceled</comment>
                     <source_model>Epay\Magento2EpicPaymentModule\Model\Config\Source\PendingCanceledStatus</source_model>
                 </field>
-                <field id="ageverificationmode" type="select" translate="label comment" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="ageverificationmode" type="select" translate="label comment" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Ageverification mode:</label>
                     <comment>Activate Ageverification></comment>
                     <source_model>Epay\Magento2EpicPaymentModule\Model\Config\Source\Ageverificationmode</source_model>
