@@ -87,6 +87,7 @@ class Callback extends Action implements CsrfAwareActionInterface
             $reference = $postData['transaction']['reference'] ?? '';
             $transactionId = $postData['transaction']['id'] ?? null;
             $state = $postData['transaction']['state'] ?? null;
+            $instantCapture = $postData['transaction']['instantCapture'] == "NO_VOID" ? true : null;
 
             if ($reference === '') {
                 $this->logger->warning('ePay callback modtaget uden orderid', ['data' => $rawBodyJson]);
@@ -117,7 +118,11 @@ class Callback extends Action implements CsrfAwareActionInterface
                     $payment->setLastTransId($transactionId);
                     $payment->setIsTransactionClosed(false);
                     $payment->setShouldCloseParentTransaction(false);
-                    $payment->registerAuthorizationNotification($amount);
+                    if ($instantCapture) {
+                        $payment->registerCaptureNotification($amount);
+                    } else {
+                        $payment->registerAuthorizationNotification($amount);
+                    }
                 }
 
                 $payment->setCcType($postData['transaction']['paymentMethodSubType'] ?? null);

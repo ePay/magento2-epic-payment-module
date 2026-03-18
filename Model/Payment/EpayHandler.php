@@ -22,7 +22,7 @@ class EpayHandler {
         $this->epay_pos = $posid;
     }
 
-    public function createPaymentRequest($orderId, $amountMinorUnits, $currency, $instantCapture, $successUrl, $failureUrl=null, $notificationUrl=null, $ageVerificationMinimumAge=null, $ageVerificationCountry=null, $customerId=null)
+    public function createPaymentRequest($orderId, $amountMinorUnits, $currency, $instantCapture, $successUrl, $failureUrl=null, $notificationUrl=null, $ageVerificationMinimumAge=null, $ageVerificationCountry=null, $customerId=null, $customerData=null, $orderLines=null)
     {
         $ePayParameters = array(
             "reference" => $orderId,
@@ -37,6 +37,14 @@ class EpayHandler {
             "successUrl" => $successUrl,
             "failureUrl" => $failureUrl
         );
+
+        if ($customerData && is_array($customerData)) {
+            $ePayParameters['customer'] = $customerData;
+        }
+
+        if ($orderLines && is_array($orderLines)) {
+            $ePayParameters['orderLines'] = $orderLines;
+        }
 
         if(isset($ageVerificationMinimumAge) && $ageVerificationMinimumAge > 0)
         {

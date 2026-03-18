@@ -2,6 +2,7 @@
 namespace Epay\Magento2EpicPaymentModule\Model\Payment;
 
 use Epay\Magento2EpicPaymentModule\Model\Payment\EpayHandler;
+use Epay\Magento2EpicPaymentModule\Helper\EpayPaymentHelper;
 use Magento\Catalog\Model\CategoryFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Exception\LocalizedException;
@@ -15,17 +16,20 @@ class LinkGenerator
     private ScopeConfigInterface $scopeConfig;
     private CategoryFactory $categoryFactory;
     private EpayHandler $epayHandler;
+    private EpayPaymentHelper $epayPaymentHelper;
 
     public function __construct(
         UrlInterface $urlBuilder,
         ScopeConfigInterface $scopeConfig,
         CategoryFactory $categoryFactory,
-        EpayHandler $epayHandler
+        EpayHandler $epayHandler,
+        EpayPaymentHelper $epayPaymentHelper
     ) {
         $this->urlBuilder = $urlBuilder;
         $this->scopeConfig = $scopeConfig;
         $this->categoryFactory = $categoryFactory;
         $this->epayHandler = $epayHandler;
+        $this->epayPaymentHelper = $epayPaymentHelper;
     }
 
     public function generateLink(OrderInterface $order): string
@@ -61,6 +65,18 @@ class LinkGenerator
 
         $ageVerificationMode = $this->scopeConfig->getValue(
             'payment/epayepicpayment/ageverificationmode',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+
+        $instantCapture = $this->scopeConfig->getValue(
+            'payment/epayepicpayment/instantcapture',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+
+        $enableInvoiceData = $this->scopeConfig->getValue(
+            'payment/epayepicpayment/enableinvoicedata',
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
@@ -112,19 +128,26 @@ class LinkGenerator
             }
         }
 
+        if ($enableInvoiceData) {
+            $customerData = $this->epayPaymentHelper->createCustomerData($order);
+            $orderLines = $this->epayPaymentHelper->createOrderLines($order);
+        }
+
         $this->epayHandler->setAuthData($apikey, $posid);
 
         $result = $this->epayHandler->createPaymentRequest(
             $order->getIncrementId(),
             (int)round((float)$order->getGrandTotal() * 100),
             $order->getOrderCurrencyCode(),
-            'OFF',
+            ($instantCapture ? "NO_VOID" : "OFF"),
             $acceptUrl,
             $failureUrl,
             $notificationUrl,
             $ageVerificationMinimumAge,
             $ageVerificationCountry,
-            $customerId
+            $customerId,
+            $customerData,
+            $orderLines
         );
 
         if (!is_object($result) || empty($result->paymentWindowUrl)) {
