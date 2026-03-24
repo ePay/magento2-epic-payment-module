@@ -22,7 +22,7 @@ class EpayHandler {
         $this->epay_pos = $posid;
     }
 
-    public function createPaymentRequest($orderId, $amountMinorUnits, $currency, $instantCapture, $successUrl, $failureUrl=null, $notificationUrl=null, $ageVerificationMinimumAge=null, $ageVerificationCountry=null, $customerId=null, $customerData=null, $orderLines=null)
+    public function createPaymentRequest($orderId, $amountMinorUnits, $currency, $instantCapture, $successUrl, $returnUrl=null, $failureUrl=null, $notificationUrl=null, $ageVerificationMinimumAge=null, $ageVerificationCountry=null, $customerId=null, $customerData=null, $orderLines=null)
     {
         $ePayParameters = array(
             "reference" => $orderId,
@@ -35,6 +35,7 @@ class EpayHandler {
             "maxAttempts" => 5,
             "notificationUrl" => $notificationUrl,
             "successUrl" => $successUrl,
+            "returnUrl" => $returnUrl,
             "failureUrl" => $failureUrl
         );
 

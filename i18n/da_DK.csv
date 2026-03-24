@@ -1,0 +1,10 @@
+# Payment canceled messages
+"Payment was canceled and your cart has been restored.","Betalingen blev annulleret, og kurven er gendannet."
+"Payment was canceled, but we could not restore your cart automatically.","Betalingen blev annulleret, men vi kunne ikke gendanne din kurv automatisk."
+
+# Payment failed messages
+"Payment failed. The order has been canceled.","Betalingen fejlede. Ordren er blevet annulleret."
+"Payment failed.","Betaling fejlet."
+
+# Payment Callback
+"Order with increment_id ""%1"" was not found.","Ordre med increment_id ""%1"" blev ikke fundet."
