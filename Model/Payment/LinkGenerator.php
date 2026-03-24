@@ -39,8 +39,13 @@ class LinkGenerator
             ['_secure' => true]
         );
 
-        $failureUrl = $this->urlBuilder->getUrl(
+        $returnUrl = $this->urlBuilder->getUrl(
             'epay/payment/cancel',
+            ['_secure' => true]
+        );
+
+        $failureUrl = $this->urlBuilder->getUrl(
+            'epay/payment/failure',
             ['_secure' => true]
         );
 
@@ -141,6 +146,7 @@ class LinkGenerator
             $order->getOrderCurrencyCode(),
             ($instantCapture ? "NO_VOID" : "OFF"),
             $acceptUrl,
+            $returnUrl,
             $failureUrl,
             $notificationUrl,
             $ageVerificationMinimumAge,

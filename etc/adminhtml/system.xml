@@ -40,7 +40,7 @@
                     <comment>Collect invoice data and send to the payment window</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="order_status_after_cancel_payment" type="select" translate="label comment" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="orderStatusAfterCancelPayment" type="select" translate="label comment" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Order Status After Canceled Payment:</label>
                     <comment>The order status after payment is canceled</comment>
                     <source_model>Epay\Magento2EpicPaymentModule\Model\Config\Source\PendingCanceledStatus</source_model>
