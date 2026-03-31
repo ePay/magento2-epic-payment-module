@@ -89,8 +89,11 @@ class LinkGenerator
         $customerId = null;
         $ageVerificationMinimumAge = null;
         $ageVerificationCountry = null;
+        $customerData = null;
+        $orderLines = null;
 
-        $countryId = $order->getShippingAddress()?->getCountryId();
+        $shippingAddress = $order->getShippingAddress();
+        $countryId = $shippingAddress ? $shippingAddress->getCountryId() : null;
 
         if (
             $ageVerificationMode === 'ageverification_enabled_all'
