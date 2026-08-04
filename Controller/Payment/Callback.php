@@ -87,6 +87,7 @@ class Callback extends Action implements CsrfAwareActionInterface
             $reference = $postData['transaction']['reference'] ?? '';
             $transactionId = $postData['transaction']['id'] ?? null;
             $state = $postData['transaction']['state'] ?? null;
+            $errorCode = $postData['transaction']['errorCode'] ?? null;
             $instantCapture = $postData['transaction']['instantCapture'] == "NO_VOID" ? true : null;
 
             if ($reference === '') {
@@ -174,7 +175,7 @@ class Callback extends Action implements CsrfAwareActionInterface
                 }
             } else {
                 $responseBody['orderStateChanged'] = false;
-                $responseBody['message'] = 'Payment updated (no order state change)';
+                $responseBody['message'] = $errorCode;
             }
 
         } catch (\Exception $e) {

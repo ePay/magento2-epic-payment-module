@@ -49,18 +49,18 @@ class PaymentMethod extends AbstractMethod
     private ScopeConfigInterface $scopeConfig;
 
     public function __construct(
-        Context $context,
-        Registry $registry,
+        Context                    $context,
+        Registry                   $registry,
         ExtensionAttributesFactory $extensionFactory,
-        AttributeValueFactory $customAttributeFactory,
-        PaymentHelper $paymentData,
-        ScopeConfigInterface $scopeConfig,
-        MethodLogger $methodLogger,
-        EpayHandler $epayHandler,
-        LoggerInterface $psrLogger,
-        AbstractResource $resource = null,
-        AbstractDb $resourceCollection = null,
-        array $data = []
+        AttributeValueFactory      $customAttributeFactory,
+        PaymentHelper              $paymentData,
+        ScopeConfigInterface       $scopeConfig,
+        MethodLogger               $methodLogger,
+        EpayHandler                $epayHandler,
+        LoggerInterface            $psrLogger,
+        ?AbstractResource          $resource = null,
+        ?AbstractDb                $resourceCollection = null,
+        array                      $data = []
     ) {
         parent::__construct(
             $context,
