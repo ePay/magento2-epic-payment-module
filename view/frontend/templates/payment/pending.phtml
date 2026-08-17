@@ -1,0 +1,24 @@
+<?php
+/** @var \Magento\Framework\View\Element\Template $block */
+$pollerConfig = json_encode([
+    'Epay_Magento2EpicPaymentModule/js/payment-status-poller' => [
+        'statusUrl' => $block->getUrl('epay/payment/status', ['_secure' => true]),
+        'successUrl' => $block->getUrl('checkout/onepage/success', ['_secure' => true])
+    ]
+]);
+?>
+<div class="epay-payment-pending"
+     data-mage-init='<?= $block->escapeHtmlAttr($pollerConfig) ?>'>
+    <h1 class="page-title">
+        <span class="base" data-ui-id="page-title-wrapper">
+            <?= $block->escapeHtml(__('Payment being processed')) ?>
+        </span>
+    </h1>
+    <p><?= $block->escapeHtml(__('Your payment is being processed. Please wait.')) ?></p>
+    <p class="message notice" data-role="payment-timeout-message" hidden>
+        <?= $block->escapeHtml(__('We are still waiting for confirmation of your payment. Your payment may still have been completed. Your order will be updated automatically when the payment system sends confirmation.')) ?>
+    </p>
+    <a class="action primary" href="<?= $block->escapeUrl($block->getUrl('epay/payment/accept', ['_secure' => true])) ?>">
+        <span><?= $block->escapeHtml(__('Refresh')) ?></span>
+    </a>
+</div>

@@ -8,3 +8,9 @@
 
 # Payment Callback
 "Order with increment_id ""%1"" was not found.","Ordre med increment_id ""%1"" blev ikke fundet."
+
+# Payment pending
+"Payment being processed","Betalingen behandles"
+"Your payment is being processed. Please wait.","Din betaling behandles. Vent venligst."
+"We are still waiting for confirmation of your payment. Your payment may still have been completed. Your order will be updated automatically when the payment system sends confirmation.","Vi venter stadig på bekræftelse af din betaling. Betalingen kan stadig være gennemført. Din ordre opdateres automatisk, når betalingssystemet har sendt bekræftelsen."
+"Refresh","Opdater"
