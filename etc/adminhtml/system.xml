@@ -4,7 +4,7 @@
     <system>
         <section id="payment">
             <group id="epayepicpayment" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>ePay Payment</label>
+                <label>ePay Payment Solutions</label>
                 <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enabled</label>
                     <comment>Enable ePay Payment Solutions as a payment option.</comment>

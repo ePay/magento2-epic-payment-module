@@ -1,0 +1,14 @@
+<?php
+/** @var \Magento\Framework\View\Element\Template $block */
+?>
+<div class="epay-payment-pending">
+    <h1 class="page-title">
+        <span class="base" data-ui-id="page-title-wrapper">
+            <?= $block->escapeHtml(__('Payment being processed')) ?>
+        </span>
+    </h1>
+    <p><?= $block->escapeHtml(__('Your payment is being processed. Please refresh this page shortly.')) ?></p>
+    <a class="action primary" href="<?= $block->escapeUrl($block->getUrl('epay/payment/accept', ['_secure' => true])) ?>">
+        <span><?= $block->escapeHtml(__('Refresh')) ?></span>
+    </a>
+</div>
