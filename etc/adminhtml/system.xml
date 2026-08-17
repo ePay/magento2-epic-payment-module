@@ -26,9 +26,9 @@
                     <label>PointOfSale ID</label>
                     <comment>Log in to the ePay Backoffice, then go to Payments -> Points of Sale to find the Point of Sale ID.</comment>
                 </field>
-                <field id="webhookAuth" translate="label" type="text" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="webhookAuth" translate="label comment" type="text" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Webhook Authorization</label>
-                    <comment>Log in to the ePay Backoffice, then navigate to Payments -> Points of Sale -> Webhook authorization to locate the webhook authorization bearer token.</comment>
+                    <comment>Required. Log in to the ePay Backoffice, then navigate to Payments -> Points of Sale -> Webhook authorization to locate the webhook authorization bearer token.</comment>
                 </field>
                 <field id="instantcapture" type="select" translate="label comment" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Instant capture:</label>

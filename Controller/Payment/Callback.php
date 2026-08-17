@@ -206,7 +206,7 @@ class Callback extends Action implements CsrfAwareActionInterface
         $expectedToken = trim($expectedToken);
 
         if ($expectedToken === '') {
-            return null;
+            return ['success' => false, 'message' => 'Webhook authorization is not configured'];
         }
 
         if (stripos($expectedToken, 'Bearer ') === 0) {
