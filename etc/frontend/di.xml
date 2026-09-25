@@ -8,4 +8,11 @@
             </argument>
         </arguments>
     </type>
+    <type name="Hyva\Checkout\Model\Magewire\Payment\PlaceOrderServiceProvider">
+        <arguments>
+            <argument name="placeOrderServiceList" xsi:type="array">
+                <item name="epayepicpayment" xsi:type="object">Epay\Magento2EpicPaymentModule\Model\Payment\HyvaCheckoutPlaceOrderService</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

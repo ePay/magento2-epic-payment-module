@@ -1,14 +1,10 @@
 <?php
 /** @var \Magento\Framework\View\Element\Template $block */
-$pollerConfig = json_encode([
-    'Epay_Magento2EpicPaymentModule/js/payment-status-poller' => [
-        'statusUrl' => $block->getUrl('epay/payment/status', ['_secure' => true]),
-        'successUrl' => $block->getUrl('checkout/onepage/success', ['_secure' => true])
-    ]
-]);
 ?>
 <div class="epay-payment-pending"
-     data-mage-init='<?= $block->escapeHtmlAttr($pollerConfig) ?>'>
+     data-epay-payment-pending
+     data-status-url="<?= $block->escapeHtmlAttr($block->getUrl('epay/payment/status', ['_secure' => true])) ?>"
+     data-success-url="<?= $block->escapeHtmlAttr($block->getUrl('checkout/onepage/success', ['_secure' => true])) ?>">
     <h1 class="page-title">
         <span class="base" data-ui-id="page-title-wrapper">
             <?= $block->escapeHtml(__('Payment being processed')) ?>
@@ -22,3 +18,4 @@ $pollerConfig = json_encode([
         <span><?= $block->escapeHtml(__('Refresh')) ?></span>
     </a>
 </div>
+<script src="<?= $block->escapeUrl($block->getViewFileUrl('Epay_Magento2EpicPaymentModule::js/payment-status-poller-native.js')) ?>" defer></script>
