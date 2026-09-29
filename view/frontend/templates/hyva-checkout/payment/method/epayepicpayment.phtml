@@ -1,0 +1,9 @@
+<?php
+/** @var \Epay\Magento2EpicPaymentModule\Block\Checkout\Payment\Description $block */
+$description = trim($block->getDescription());
+?>
+<?php if ($description !== ''): ?>
+    <div class="payment-method-description">
+        <p><?= $block->escapeHtml($description) ?></p>
+    </div>
+<?php endif; ?>
