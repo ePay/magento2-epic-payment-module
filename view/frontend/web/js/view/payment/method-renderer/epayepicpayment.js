@@ -26,11 +26,21 @@ define([
         redirectAfterPlaceOrder: false,
 
         getDescription: function () {
-                return window.checkoutConfig.payment[this.getCode()].description;
+            var config = window.checkoutConfig.payment[this.getCode()] || {};
+            return config.description || '';
+        },
+
+        hasDescription: function () {
+            return this.getDescription().trim() !== '';
+        },
+
+        getLogos: function () {
+            var config = window.checkoutConfig.payment[this.getCode()] || {};
+            return config.logos || [];
         },
 
         getCode: function () {
-            return 'epayepicpayment';
+            return this.item.method;
         },
 
         isActive: function () {

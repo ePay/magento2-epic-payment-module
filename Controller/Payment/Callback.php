@@ -60,7 +60,23 @@ class Callback extends Action implements CsrfAwareActionInterface
 
     public function execute()
     {
-        $authError = $this->validateWebhookAuth();
+        $rawBodyJson = $this->getRequest()->getContent();
+        $postData = json_decode($rawBodyJson, true);
+        $postData = is_array($postData) ? $postData : [];
+
+        $callbackOrder = null;
+        $reference = (string)($postData['transaction']['reference'] ?? '');
+        if ($reference !== '') {
+            try {
+                $callbackOrder = $this->getOrderByIncrementId($reference);
+            } catch (NoSuchEntityException $e) {
+                $callbackOrder = null;
+            }
+        }
+
+        $authError = $this->validateWebhookAuth(
+            $callbackOrder ? (int)$callbackOrder->getStoreId() : null
+        );
         if ($authError !== null) {
             $this->logger->warning('ePay callback authorization failed', [
                 'reason' => $authError['message'] ?? 'unknown'
@@ -72,9 +88,6 @@ class Callback extends Action implements CsrfAwareActionInterface
                 ->setStatusCode(401)
                 ->setBody(json_encode($authError));
         }
-
-        $rawBodyJson = $this->getRequest()->getContent();
-        $postData = json_decode($rawBodyJson, true);
 
         $this->logger->info('ePay callback modtaget', ['data' => $rawBodyJson]);
 
@@ -88,7 +101,7 @@ class Callback extends Action implements CsrfAwareActionInterface
             $transactionId = $postData['transaction']['id'] ?? null;
             $state = $postData['transaction']['state'] ?? null;
             $errorCode = $postData['transaction']['errorCode'] ?? null;
-            $instantCapture = $postData['transaction']['instantCapture'] == "NO_VOID" ? true : null;
+            $instantCapture = ($postData['transaction']['instantCapture'] ?? '') === 'NO_VOID';
 
             if ($reference === '') {
                 $this->logger->warning('ePay callback modtaget uden orderid', ['data' => $rawBodyJson]);
@@ -110,11 +123,12 @@ class Callback extends Action implements CsrfAwareActionInterface
             ];
 
             if ($state === 'SUCCESS') {
-                $order = $this->getOrderByIncrementId((string)$reference);
+                $order = $callbackOrder ?: $this->getOrderByIncrementId((string)$reference);
                 $payment = $order->getPayment();
                 $amount  = (float)$order->getGrandTotal();
+                $isNewTransaction = $transactionId && !$payment->getLastTransId();
 
-                if ($transactionId && (string)$payment->getLastTransId() !== (string)$transactionId) {
+                if ($isNewTransaction) {
                     $payment->setTransactionId($transactionId);
                     $payment->setLastTransId($transactionId);
                     $payment->setIsTransactionClosed(false);
@@ -126,52 +140,54 @@ class Callback extends Action implements CsrfAwareActionInterface
                     }
                 }
 
-                $payment->setCcType($postData['transaction']['paymentMethodSubType'] ?? null);
-                $payment->setCcNumberEnc($postData['transaction']['paymentMethodDisplayText'] ?? null);
+                if ($isNewTransaction) {
+                    $payment->setCcType($postData['transaction']['paymentMethodSubType'] ?? null);
+                    $payment->setCcNumberEnc($postData['transaction']['paymentMethodDisplayText'] ?? null);
+                    $payment->setAdditionalInformation('method_title', $payment->getMethodInstance()->getTitle());
+                    $payment->setAdditionalInformation('epay_payment_cardnumber', $postData['transaction']['paymentMethodDisplayText'] ?? null);
+                    $payment->setAdditionalInformation('epay_payment_subtype', $postData['transaction']['paymentMethodSubType'] ?? null);
+                    $payment->setAdditionalInformation('epay_payment_expiry', $postData['transaction']['paymentMethodExpiry'] ?? null);
+                    $payment->setAdditionalInformation('epay_payment_type', $postData['transaction']['paymentMethodType'] ?? null);
+                    $payment->setAdditionalInformation('epay_payment_posid', $postData['transaction']['pointOfSaleId'] ?? null);
+                    $payment->setAdditionalInformation('epay_payment_id', $postData['transaction']['id'] ?? null);
 
-                $payment->setAdditionalInformation('epay_payment_cardnumber', $postData['transaction']['paymentMethodDisplayText'] ?? null);
-                $payment->setAdditionalInformation('epay_payment_subtype', $postData['transaction']['paymentMethodSubType'] ?? null);
-                $payment->setAdditionalInformation('epay_payment_expiry', $postData['transaction']['paymentMethodExpiry'] ?? null);
-                $payment->setAdditionalInformation('epay_payment_type', $postData['transaction']['paymentMethodType'] ?? null);
-                $payment->setAdditionalInformation('epay_payment_posid', $postData['transaction']['pointOfSaleId'] ?? null);
-                $payment->setAdditionalInformation('epay_payment_id', $postData['transaction']['id'] ?? null);
+                    $order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING)
+                        ->setStatus(\Magento\Sales\Model\Order::STATE_PROCESSING);
 
-                // $payment->setAdditionalInformation('epay_callback', $rawBodyJson);
+                    $this->orderRepository->save($order);
 
-                $order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING)
-                    ->setStatus(\Magento\Sales\Model\Order::STATE_PROCESSING);
+                    $responseBody['message'] = 'Order set to processing';
+                    $responseBody['orderStateChanged'] = true;
 
-                $this->orderRepository->save($order);
+                    $emailSent = (int)$order->getData('email_sent');
 
-                $responseBody['message'] = 'Order set to processing';
-                $responseBody['orderStateChanged'] = true;
+                    if ($emailSent !== 1) {
+                        $order->setSendEmail(true);
+                        $order->setCanSendNewEmailFlag(true);
 
-                $emailSent = (int)$order->getData('email_sent');
+                        try {
+                            $sent = (bool)$this->orderSender->send($order, true);
+                            if ($sent) {
+                                $responseBody['email'] = 'sent';
+                            } else {
+                                $responseBody['email'] = 'not_sent';
+                            }
+                        } catch (\Exception $e) {
+                            $this->logger->error('Fejl ved afsendelse af ordrebekræftelse', [
+                                'exception' => $e->getMessage(),
+                                'order_id'  => $order->getEntityId()
+                            ]);
 
-                if ($emailSent !== 1) {
-
-                    $order->setSendEmail(true);
-                    $order->setCanSendNewEmailFlag(true);
-
-                    try {
-                        $sent = (bool)$this->orderSender->send($order, true);
-                        if ($sent) {
-                            $responseBody['email'] = 'sent';
-                        } else {
-                            $responseBody['email'] = 'not_sent';
+                            $responseBody['email'] = 'failed';
+                            $responseBody['emailError'] = $e->getMessage();
+                            $responseBody['message'] = 'Order set to processing (email failed)';
                         }
-                    } catch (\Exception $e) {
-                        $this->logger->error('Fejl ved afsendelse af ordrebekræftelse', [
-                            'exception' => $e->getMessage(),
-                            'order_id'  => $order->getEntityId()
-                        ]);
-
-                        $responseBody['email'] = 'failed';
-                        $responseBody['emailError'] = $e->getMessage();
-                        $responseBody['message'] = 'Order set to processing (email failed)';
+                    } else {
+                        $responseBody['email'] = 'already_sent';
                     }
                 } else {
-                    $responseBody['email'] = 'already_sent';
+                    $responseBody['message'] = 'Payment callback already processed';
+                    $responseBody['orderStateChanged'] = false;
                 }
             } else {
                 $responseBody['orderStateChanged'] = false;
@@ -194,13 +210,14 @@ class Callback extends Action implements CsrfAwareActionInterface
             ->setBody(json_encode($responseBody));
     }
 
-    private function validateWebhookAuth(): ?array
+    private function validateWebhookAuth(?int $storeId): ?array
     {
         $configPath = 'payment/epayepicpayment/webhookAuth';
 
         $expectedToken = (string) $this->scopeConfig->getValue(
             $configPath,
-            ScopeInterface::SCOPE_STORE
+            ScopeInterface::SCOPE_STORE,
+            $storeId
         );
 
         $expectedToken = trim($expectedToken);
