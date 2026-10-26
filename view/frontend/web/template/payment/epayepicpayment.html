@@ -6,12 +6,17 @@
                data-bind="attr: {id: getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod" />
         <label data-bind="attr: {for: getCode()}">
             <span data-bind="text: getTitle()"></span>
+            <!-- ko foreach: getLogos() -->
+            <img class="epay-payment-method-logo"
+                 data-bind="attr: {src: url, alt: alt}" />
+            <!-- /ko -->
         </label>
     </div>
     <div class="payment-method-content" data-bind="visible: isChecked">
 
-        <div class="payment-method-description">
-            <p data-bind="text: getDescription()"></p>
+        <div class="payment-method-description"
+             data-bind="visible: hasDescription()">
+            <p class="epay-payment-method-description" data-bind="text: getDescription()"></p>
         </div>
 
         <div class="checkout-agreements-block">

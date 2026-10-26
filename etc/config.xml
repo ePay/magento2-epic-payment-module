@@ -7,6 +7,7 @@
                 <active>1</active>
                 <model>Epay\Magento2EpicPaymentModule\Model\PaymentMethod</model>
                 <title>ePay EPIC</title>
+                <card_logos>visa,mastercard,dankort,american_express,diners_club,discover,jcb,maestro</card_logos>
                 <sort_order>10</sort_order>
                 <payment_action>authorize</payment_action>
                 <is_gateway>1</is_gateway>
@@ -16,6 +17,69 @@
                 <can_capture>1</can_capture>
                 <can_use_checkout>1</can_use_checkout>
             </epayepicpayment>
+            <epayepicpayment_anyday>
+                <active>0</active>
+                <model>Epay\Magento2EpicPaymentModule\Model\AnydayPaymentMethod</model>
+                <title>Anyday</title>
+                <sort_order>20</sort_order>
+                <allowspecific>0</allowspecific>
+                <specificcountry></specificcountry>
+                <allowed_currencies></allowed_currencies>
+            </epayepicpayment_anyday>
+            <epayepicpayment_applepay>
+                <active>0</active>
+                <model>Epay\Magento2EpicPaymentModule\Model\ApplePayPaymentMethod</model>
+                <title>Apple Pay</title>
+                <sort_order>30</sort_order>
+                <allowspecific>0</allowspecific>
+                <specificcountry></specificcountry>
+                <allowed_currencies></allowed_currencies>
+            </epayepicpayment_applepay>
+            <epayepicpayment_googlepay>
+                <active>0</active>
+                <model>Epay\Magento2EpicPaymentModule\Model\GooglePayPaymentMethod</model>
+                <title>Google Pay</title>
+                <sort_order>40</sort_order>
+                <allowspecific>0</allowspecific>
+                <specificcountry></specificcountry>
+                <allowed_currencies></allowed_currencies>
+            </epayepicpayment_googlepay>
+            <epayepicpayment_klarna>
+                <active>0</active>
+                <model>Epay\Magento2EpicPaymentModule\Model\KlarnaPaymentMethod</model>
+                <title>Klarna</title>
+                <sort_order>50</sort_order>
+                <allowspecific>0</allowspecific>
+                <specificcountry></specificcountry>
+                <allowed_currencies></allowed_currencies>
+            </epayepicpayment_klarna>
+            <epayepicpayment_mobilepay>
+                <active>0</active>
+                <model>Epay\Magento2EpicPaymentModule\Model\MobilePayPaymentMethod</model>
+                <title>MobilePay</title>
+                <sort_order>60</sort_order>
+                <allowspecific>0</allowspecific>
+                <specificcountry></specificcountry>
+                <allowed_currencies></allowed_currencies>
+            </epayepicpayment_mobilepay>
+            <epayepicpayment_swish>
+                <active>0</active>
+                <model>Epay\Magento2EpicPaymentModule\Model\SwishPaymentMethod</model>
+                <title>Swish</title>
+                <sort_order>70</sort_order>
+                <allowspecific>0</allowspecific>
+                <specificcountry></specificcountry>
+                <allowed_currencies></allowed_currencies>
+            </epayepicpayment_swish>
+            <epayepicpayment_viabill>
+                <active>0</active>
+                <model>Epay\Magento2EpicPaymentModule\Model\ViaBillPaymentMethod</model>
+                <title>ViaBill</title>
+                <sort_order>80</sort_order>
+                <allowspecific>0</allowspecific>
+                <specificcountry></specificcountry>
+                <allowed_currencies></allowed_currencies>
+            </epayepicpayment_viabill>
         </payment>
     </default>
 </config>

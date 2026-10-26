@@ -12,6 +12,17 @@ use Magento\Store\Model\ScopeInterface;
 
 class LinkGenerator
 {
+    private const ALLOWED_PAYMENT_METHODS = [
+        'epayepicpayment' => 'CARD',
+        'epayepicpayment_anyday' => 'ANYDAY',
+        'epayepicpayment_applepay' => 'APPLE_PAY',
+        'epayepicpayment_googlepay' => 'GOOGLE_PAY',
+        'epayepicpayment_klarna' => 'KLARNA',
+        'epayepicpayment_mobilepay' => 'VIPPS_MOBILEPAY',
+        'epayepicpayment_swish' => 'SWISH',
+        'epayepicpayment_viabill' => 'VIABILL',
+    ];
+
     private UrlInterface $urlBuilder;
     private ScopeConfigInterface $scopeConfig;
     private CategoryFactory $categoryFactory;
@@ -34,6 +45,10 @@ class LinkGenerator
 
     public function generateLink(OrderInterface $order): string
     {
+        $paymentMethodCode = (string)$order->getPayment()->getMethod();
+        $allowedPaymentMethods = isset(self::ALLOWED_PAYMENT_METHODS[$paymentMethodCode])
+            ? [self::ALLOWED_PAYMENT_METHODS[$paymentMethodCode]]
+            : [];
         $acceptUrl = $this->urlBuilder->getUrl(
             'epay/payment/accept',
             ['_secure' => true]
@@ -156,7 +171,8 @@ class LinkGenerator
             $ageVerificationCountry,
             $customerId,
             $customerData,
-            $orderLines
+            $orderLines,
+            $allowedPaymentMethods
         );
 
         if (!is_object($result) || empty($result->paymentWindowUrl)) {

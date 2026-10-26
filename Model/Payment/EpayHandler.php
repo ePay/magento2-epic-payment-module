@@ -22,10 +22,10 @@ class EpayHandler {
         $this->epay_pos = $posid;
     }
 
-    public function createPaymentRequest($orderId, $amountMinorUnits, $currency, $instantCapture, $successUrl, $returnUrl=null, $failureUrl=null, $notificationUrl=null, $ageVerificationMinimumAge=null, $ageVerificationCountry=null, $customerId=null, $customerData=null, $orderLines=null)
+    public function createPaymentRequest($orderId, $amountMinorUnits, $currency, $instantCapture, $successUrl, $returnUrl=null, $failureUrl=null, $notificationUrl=null, $ageVerificationMinimumAge=null, $ageVerificationCountry=null, $customerId=null, $customerData=null, $orderLines=null, array $allowedPaymentMethods = [])
     {
         $ePayParameters = array(
-            "reference" => $orderId,
+            "reference" => preg_replace('/[^A-Za-z0-9._-]/', '', (string)$orderId),
             "pointOfSaleId" => $this->epay_pos,
             "amount" => $amountMinorUnits,
             "currency" => $currency,
@@ -38,6 +38,10 @@ class EpayHandler {
             "returnUrl" => $returnUrl,
             "failureUrl" => $failureUrl
         );
+
+        if ($allowedPaymentMethods) {
+            $ePayParameters['allowedPaymentMethods'] = $allowedPaymentMethods;
+        }
 
         if ($customerData && is_array($customerData)) {
             $ePayParameters['customer'] = $customerData;
@@ -164,6 +168,7 @@ class EpayHandler {
         $ch = curl_init($endpoint_URL);
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Accept: application/json',
             'Content-Type: application/json',
             'Authorization: Bearer ' . $this->epay_apikey,
             'X-EPay-System: ' . $this->epayPaymentHelper->getModuleHeaderInfo(),
@@ -189,6 +194,7 @@ class EpayHandler {
         $ch = curl_init($endpoint_URL);
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Accept: application/json',
             'Content-Type: application/json',
             'Authorization: Bearer ' . $this->epay_apikey,
             'X-EPay-System: ' . $this->epayPaymentHelper->getModuleHeaderInfo(),
@@ -216,6 +222,7 @@ class EpayHandler {
         $ch = curl_init($endpoint_URL);
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Accept: application/json',
             'Content-Type: application/json',
             'Authorization: Bearer ' . $this->epay_apikey,
             'X-EPay-System: ' . $this->epayPaymentHelper->getModuleHeaderInfo(),
