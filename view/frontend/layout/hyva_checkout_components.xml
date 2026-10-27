@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="checkout.payment.methods">
+            <block class="Epay\Magento2EpicPaymentModule\Block\Checkout\PaymentLogos"
+                   name="checkout.payment.method.epayepicpayment"
+                   as="epayepicpayment"
+                   template="Epay_Magento2EpicPaymentModule::hyva/checkout/payment/logos.phtml"/>
+            <block class="Epay\Magento2EpicPaymentModule\Block\Checkout\PaymentLogos"
+                   name="checkout.payment.method.epayepicpayment_anyday"
+                   as="epayepicpayment_anyday"
+                   template="Epay_Magento2EpicPaymentModule::hyva/checkout/payment/logos.phtml"/>
+            <block class="Epay\Magento2EpicPaymentModule\Block\Checkout\PaymentLogos"
+                   name="checkout.payment.method.epayepicpayment_applepay"
+                   as="epayepicpayment_applepay"
+                   template="Epay_Magento2EpicPaymentModule::hyva/checkout/payment/logos.phtml"/>
+            <block class="Epay\Magento2EpicPaymentModule\Block\Checkout\PaymentLogos"
+                   name="checkout.payment.method.epayepicpayment_googlepay"
+                   as="epayepicpayment_googlepay"
+                   template="Epay_Magento2EpicPaymentModule::hyva/checkout/payment/logos.phtml"/>
+            <block class="Epay\Magento2EpicPaymentModule\Block\Checkout\PaymentLogos"
+                   name="checkout.payment.method.epayepicpayment_klarna"
+                   as="epayepicpayment_klarna"
+                   template="Epay_Magento2EpicPaymentModule::hyva/checkout/payment/logos.phtml"/>
+            <block class="Epay\Magento2EpicPaymentModule\Block\Checkout\PaymentLogos"
+                   name="checkout.payment.method.epayepicpayment_mobilepay"
+                   as="epayepicpayment_mobilepay"
+                   template="Epay_Magento2EpicPaymentModule::hyva/checkout/payment/logos.phtml"/>
+            <block class="Epay\Magento2EpicPaymentModule\Block\Checkout\PaymentLogos"
+                   name="checkout.payment.method.epayepicpayment_swish"
+                   as="epayepicpayment_swish"
+                   template="Epay_Magento2EpicPaymentModule::hyva/checkout/payment/logos.phtml"/>
+            <block class="Epay\Magento2EpicPaymentModule\Block\Checkout\PaymentLogos"
+                   name="checkout.payment.method.epayepicpayment_viabill"
+                   as="epayepicpayment_viabill"
+                   template="Epay_Magento2EpicPaymentModule::hyva/checkout/payment/logos.phtml"/>
+        </referenceBlock>
+    </body>
+</page>

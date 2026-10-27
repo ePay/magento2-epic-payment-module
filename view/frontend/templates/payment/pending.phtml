@@ -1,0 +1,23 @@
+<?php
+/** @var \Magento\Framework\View\Element\Template $block */
+$isPaymentCompleted = (bool)$block->getData('is_payment_completed');
+?>
+<?php if ($isPaymentCompleted): ?>
+    <div class="epay-payment-completed">
+        <p><?= $block->escapeHtml(__('Thank you for your order. Your payment has been completed.')) ?></p>
+    </div>
+<?php else: ?>
+    <div class="epay-payment-pending"
+         data-epay-payment-pending
+         data-status-url="<?= $block->escapeHtmlAttr($block->getUrl('epay/payment/status', ['_secure' => true])) ?>"
+         data-success-url="<?= $block->escapeHtmlAttr($block->getUrl('checkout/onepage/success', ['_secure' => true])) ?>">
+        <p><?= $block->escapeHtml(__('Your payment is being processed. Please wait.')) ?></p>
+        <p class="message notice" data-role="payment-timeout-message" hidden>
+            <?= $block->escapeHtml(__('We are still waiting for confirmation of your payment. Your payment may still have been completed. Your order will be updated automatically when the payment system sends confirmation.')) ?>
+        </p>
+        <a class="action primary" href="<?= $block->escapeUrl($block->getUrl('epay/payment/accept', ['_secure' => true])) ?>">
+            <span><?= $block->escapeHtml(__('Refresh')) ?></span>
+        </a>
+    </div>
+    <script src="<?= $block->escapeUrl($block->getViewFileUrl('Epay_Magento2EpicPaymentModule::js/payment-status-poller-native.js')) ?>" defer></script>
+<?php endif; ?>
