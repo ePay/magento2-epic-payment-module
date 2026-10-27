@@ -89,7 +89,11 @@ class Callback extends Action implements CsrfAwareActionInterface
                 ->setBody(json_encode($authError));
         }
 
-        $this->logger->info('ePay callback modtaget', ['data' => $rawBodyJson]);
+        $this->logger->info('ePay callback received', [
+            'reference' => $reference,
+            'transaction_id' => $postData['transaction']['id'] ?? null,
+            'state' => $postData['transaction']['state'] ?? null,
+        ]);
 
         $responseBody = [
             'success' => true,
@@ -104,7 +108,7 @@ class Callback extends Action implements CsrfAwareActionInterface
             $instantCapture = ($postData['transaction']['instantCapture'] ?? '') === 'NO_VOID';
 
             if ($reference === '') {
-                $this->logger->warning('ePay callback modtaget uden orderid', ['data' => $rawBodyJson]);
+                $this->logger->warning('ePay callback received without order reference');
                 $responseBody = ['success' => false, 'message' => 'Missing order reference'];
 
                 return $this->getResponse()
@@ -125,6 +129,9 @@ class Callback extends Action implements CsrfAwareActionInterface
             if ($state === 'SUCCESS') {
                 $order = $callbackOrder ?: $this->getOrderByIncrementId((string)$reference);
                 $payment = $order->getPayment();
+                $storedFee = (float)$payment->getAdditionalInformation('epay_card_fee_amount');
+                $this->applyCardFee($order, $payment, $postData);
+                $feeApplied = $storedFee <= 0.0 && (float)$payment->getAdditionalInformation('epay_card_fee_amount') > 0.0;
                 $amount  = (float)$order->getGrandTotal();
                 $isNewTransaction = $transactionId && !$payment->getLastTransId();
 
@@ -188,6 +195,9 @@ class Callback extends Action implements CsrfAwareActionInterface
                 } else {
                     $responseBody['message'] = 'Payment callback already processed';
                     $responseBody['orderStateChanged'] = false;
+                    if ($feeApplied) {
+                        $this->orderRepository->save($order);
+                    }
                 }
             } else {
                 $responseBody['orderStateChanged'] = false;
@@ -197,7 +207,7 @@ class Callback extends Action implements CsrfAwareActionInterface
         } catch (\Exception $e) {
             $this->logger->error('Fejl ved behandling af ePay callback', [
                 'exception' => $e->getMessage(),
-                'data'      => $rawBodyJson
+                'reference' => $reference,
             ]);
 
             $responseBody = ['success' => false, 'message' => 'Internal error'];
@@ -258,8 +268,62 @@ class Callback extends Action implements CsrfAwareActionInterface
         return null;
     }
 
+    /**
+     * ePay supplies the card fee in minor units. Apply it once before Magento
+     * registers the payment so the order and PSP totals agree.
+     */
+    private function applyCardFee(
+        \Magento\Sales\Api\Data\OrderInterface $order,
+        \Magento\Sales\Api\Data\OrderPaymentInterface $payment,
+        array $postData
+    ): void {
+        $feeInMinorUnits = (int)($postData['transaction']['fee'] ?? 0);
+        $transactionCurrency = (string)($postData['transaction']['currency'] ?? '');
+
+        if ($feeInMinorUnits <= 0 || $transactionCurrency !== (string)$order->getOrderCurrencyCode()) {
+            return;
+        }
+
+        $feeAmount = round($feeInMinorUnits / 100, 2);
+        $appliedFee = (float)$payment->getAdditionalInformation('epay_card_fee_amount');
+        if (abs($appliedFee - $feeAmount) < 0.0001) {
+            return;
+        }
+
+        if ($appliedFee > 0.0) {
+            $this->logger->warning('ePay callback card fee does not match the fee already stored on the order', [
+                'order_id' => $order->getEntityId(),
+                'stored_fee' => $appliedFee,
+                'received_fee' => $feeAmount,
+            ]);
+            return;
+        }
+
+        $baseFeeAmount = $feeAmount;
+        if ((string)$order->getBaseCurrencyCode() !== (string)$order->getOrderCurrencyCode()) {
+            $rate = (float)$order->getBaseToOrderRate();
+            if ($rate <= 0.0) {
+                $this->logger->warning('ePay card fee was not applied because the order exchange rate is missing', [
+                    'order_id' => $order->getEntityId(),
+                ]);
+                return;
+            }
+            $baseFeeAmount = round($feeAmount / $rate, 4);
+        }
+
+        $order->setGrandTotal((float)$order->getGrandTotal() + $feeAmount)
+            ->setTotalDue((float)$order->getTotalDue() + $feeAmount)
+            ->setBaseGrandTotal((float)$order->getBaseGrandTotal() + $baseFeeAmount)
+            ->setBaseTotalDue((float)$order->getBaseTotalDue() + $baseFeeAmount);
+        $payment->setAdditionalInformation('epay_card_fee_amount', $feeAmount);
+        $payment->setAdditionalInformation('epay_card_fee_currency', $transactionCurrency);
+        $order->addCommentToStatusHistory(
+            __('ePay card fee added: %1 %2.', number_format($feeAmount, 2, '.', ''), $transactionCurrency)
+        );
+    }
     private function getOrderByIncrementId(string $incrementId): \Magento\Sales\Api\Data\OrderInterface
     {
+
         $searchCriteria = $this->searchCriteriaBuilderFactory->create()
             ->addFilter('increment_id', $incrementId, 'eq')
             ->setPageSize(1)

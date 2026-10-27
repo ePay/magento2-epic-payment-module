@@ -7,6 +7,7 @@ use Magento\Catalog\Model\CategoryFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\UrlInterface;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Store\Model\ScopeInterface;
 
@@ -23,54 +24,55 @@ class LinkGenerator
         'epayepicpayment_viabill' => 'VIABILL',
     ];
 
-    private UrlInterface $urlBuilder;
+    private StoreManagerInterface $storeManager;
     private ScopeConfigInterface $scopeConfig;
     private CategoryFactory $categoryFactory;
     private EpayHandler $epayHandler;
     private EpayPaymentHelper $epayPaymentHelper;
 
     public function __construct(
-        UrlInterface $urlBuilder,
+        StoreManagerInterface $storeManager,
         ScopeConfigInterface $scopeConfig,
         CategoryFactory $categoryFactory,
         EpayHandler $epayHandler,
         EpayPaymentHelper $epayPaymentHelper
     ) {
-        $this->urlBuilder = $urlBuilder;
+        $this->storeManager = $storeManager;
         $this->scopeConfig = $scopeConfig;
         $this->categoryFactory = $categoryFactory;
         $this->epayHandler = $epayHandler;
         $this->epayPaymentHelper = $epayPaymentHelper;
     }
 
+    public function supportsPaymentMethod(string $paymentMethodCode): bool
+    {
+        return isset(self::ALLOWED_PAYMENT_METHODS[$paymentMethodCode]);
+    }
+
     public function generateLink(OrderInterface $order): string
+    {
+        return $this->generatePaymentUrl($order, false);
+    }
+
+    public function generatePaymentLink(OrderInterface $order): string
+    {
+        return $this->generatePaymentUrl($order, true);
+    }
+
+    private function generatePaymentUrl(OrderInterface $order, bool $isPaymentLink): string
     {
         $paymentMethodCode = (string)$order->getPayment()->getMethod();
         $allowedPaymentMethods = isset(self::ALLOWED_PAYMENT_METHODS[$paymentMethodCode])
             ? [self::ALLOWED_PAYMENT_METHODS[$paymentMethodCode]]
             : [];
-        $acceptUrl = $this->urlBuilder->getUrl(
-            'epay/payment/accept',
-            ['_secure' => true]
-        );
-
-        $returnUrl = $this->urlBuilder->getUrl(
-            'epay/payment/cancel',
-            ['_secure' => true]
-        );
-
-        $failureUrl = $this->urlBuilder->getUrl(
-            'epay/payment/failure',
-            ['_secure' => true]
-        );
-
-        $notificationUrl = $this->urlBuilder->getUrl(
-            'epay/payment/callback',
-            ['_secure' => true]
-        );
-
         $storeId = (int)$order->getStoreId();
+        $store = $this->storeManager->getStore($storeId);
+        $baseUrl = rtrim($store->getBaseUrl(UrlInterface::URL_TYPE_LINK, true), '/');
 
+        $acceptUrl = $baseUrl . '/epay/payment/accept/';
+        $returnUrl = $baseUrl . '/epay/payment/cancel/';
+        $failureUrl = $baseUrl . '/epay/payment/failure/';
+        $notificationUrl = $baseUrl . '/epay/payment/callback/';
         $apikey = $this->scopeConfig->getValue(
             'payment/epayepicpayment/apikey',
             ScopeInterface::SCOPE_STORE,
@@ -158,7 +160,7 @@ class LinkGenerator
 
         $this->epayHandler->setAuthData($apikey, $posid);
 
-        $result = $this->epayHandler->createPaymentRequest(
+        $result = $this->epayHandler->{$isPaymentLink ? 'createPaymentLink' : 'createPaymentRequest'}(
             $order->getIncrementId(),
             (int)round((float)$order->getGrandTotal() * 100),
             $order->getOrderCurrencyCode(),
@@ -175,7 +177,8 @@ class LinkGenerator
             $allowedPaymentMethods
         );
 
-        if (!is_object($result) || empty($result->paymentWindowUrl)) {
+        $urlProperty = $isPaymentLink ? 'url' : 'paymentWindowUrl';
+        if (!is_object($result) || empty($result->{$urlProperty})) {
             $errorMessage = 'Could not create payment link';
 
             if (is_object($result)) {
@@ -201,6 +204,6 @@ class LinkGenerator
             throw new LocalizedException(__($errorMessage));
         }
 
-        return (string)$result->paymentWindowUrl;
+        return (string)$result->{$urlProperty};
     }
 }

@@ -1,0 +1,18 @@
+<?php
+declare(strict_types=1);
+
+use Epay\Magento2EpicPaymentModule\Block\Checkout\PaymentLogos;
+use Magento\Framework\Escaper;
+
+/** @var PaymentLogos $block */
+/** @var Escaper $escaper */
+
+$logos = $block->getLogos();
+?>
+<?php if ($logos): ?>
+    <div class="flex flex-wrap items-center gap-2" aria-label="<?= $escaper->escapeHtmlAttr(__('Accepted payment cards')) ?>">
+        <?php foreach ($logos as $logo): ?>
+            <img class="h-7 w-auto" src="<?= $escaper->escapeUrl($logo['url']) ?>" alt="<?= $escaper->escapeHtmlAttr($logo['alt']) ?>" loading="lazy">
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>
