@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Config/etc/system_file.xsd">
+    <system>
+        <section id="payment">
+            <group id="epayepicpayment" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>ePay Payment Solutions</label>
+                <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enabled</label>
+                    <comment>Enable ePay Payment Solutions as a payment option.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Title</label>
+                    <comment>The title of the payment method displayed to the customers.</comment>
+                </field>
+                <field id="description" translate="label" type="textarea" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Description</label>
+                    <comment>The description of the payment method displayed to the customers.</comment>
+                </field>
+                <field id="card_logos" translate="label comment" type="multiselect" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Kortlogoer i checkout</label>
+                    <comment>Indstillingen ændrer kun logoerne i checkout og påvirker ikke, hvilke kort butikken kan modtage.</comment>
+                    <source_model>Epay\Magento2EpicPaymentModule\Model\Config\Source\CardLogos</source_model>
+                    <backend_model>Epay\Magento2EpicPaymentModule\Model\Config\Backend\CardLogos</backend_model>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="apikey" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>API Key</label>
+                    <comment>Log in to the ePay Backoffice, then go to Developers -> API keys to find the API key.</comment>
+                </field>
+                <field id="posid" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>PointOfSale ID</label>
+                    <comment>Log in to the ePay Backoffice, then go to Payments -> Points of Sale to find the Point of Sale ID.</comment>
+                </field>
+                <field id="webhookAuth" translate="label comment" type="text" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Webhook Authorization</label>
+                    <comment>Required. Log in to the ePay Backoffice, then navigate to Payments -> Points of Sale -> Webhook authorization to locate the webhook authorization bearer token.</comment>
+                </field>
+                <field id="instantcapture" type="select" translate="label comment" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Instant capture:</label>
+                    <comment>This is used if you wish to capture the payments at the same time as it is authorized. This option may only be used if the cardholder receives the goods at once.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="enableinvoicedata" type="select" translate="label comment" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable invoice data:</label>
+                    <comment>Collect invoice data and send to the payment window</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="orderStatusAfterCancelPayment" type="select" translate="label comment" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Order Status After Canceled Payment:</label>
+                    <comment>The order status after payment is canceled</comment>
+                    <source_model>Epay\Magento2EpicPaymentModule\Model\Config\Source\PendingCanceledStatus</source_model>
+                </field>
+                <field id="ageverificationmode" type="select" translate="label comment" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Ageverification mode:</label>
+                    <comment>Activate Ageverification></comment>
+                    <source_model>Epay\Magento2EpicPaymentModule\Model\Config\Source\Ageverificationmode</source_model>
+                </field>
+            </group>
+            <group id="epayepicpayment_anyday" translate="label" type="text" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>ePay Anyday</label>
+                <field id="active" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1"><label>Enabled</label><comment>Enable Anyday as a separate checkout payment method.</comment><source_model>Magento\Config\Model\Config\Source\Yesno</source_model></field>
+                <field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1"><label>Title</label></field>
+                <field id="description" translate="label comment" type="textarea" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1"><label>Description</label><comment>The description displayed below the payment method title in checkout.</comment></field>
+                <field id="sort_order" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1"><label>Sort Order</label></field>
+                <field id="allowspecific" translate="label" type="allowspecific" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1"><label>Payment from Applicable Countries</label><source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model></field>
+                <field id="specificcountry" translate="label" type="multiselect" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1"><label>Payment from Specific Countries</label><source_model>Magento\Directory\Model\Config\Source\Country</source_model><can_be_empty>1</can_be_empty><depends><field id="allowspecific">1</field></depends></field>
+                <field id="allowed_currencies" translate="label comment" type="multiselect" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1"><label>Allowed Currencies</label><comment>Leave empty to allow all currencies.</comment><source_model>Magento\Config\Model\Config\Source\Locale\Currency</source_model><can_be_empty>1</can_be_empty></field>
+            </group>
+            <group id="epayepicpayment_applepay" translate="label" type="text" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>ePay Apple Pay</label>
+                <field id="active" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1"><label>Enabled</label><comment>Enable Apple Pay as a separate checkout payment method.</comment><source_model>Magento\Config\Model\Config\Source\Yesno</source_model></field>
+                <field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1"><label>Title</label></field>
+                <field id="description" translate="label comment" type="textarea" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1"><label>Description</label><comment>The description displayed below the payment method title in checkout.</comment></field>
+                <field id="sort_order" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1"><label>Sort Order</label></field>
+                <field id="allowspecific" translate="label" type="allowspecific" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1"><label>Payment from Applicable Countries</label><source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model></field>
+                <field id="specificcountry" translate="label" type="multiselect" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1"><label>Payment from Specific Countries</label><source_model>Magento\Directory\Model\Config\Source\Country</source_model><can_be_empty>1</can_be_empty><depends><field id="allowspecific">1</field></depends></field>
+                <field id="allowed_currencies" translate="label comment" type="multiselect" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1"><label>Allowed Currencies</label><comment>Leave empty to allow all currencies.</comment><source_model>Magento\Config\Model\Config\Source\Locale\Currency</source_model><can_be_empty>1</can_be_empty></field>
+            </group>
+            <group id="epayepicpayment_googlepay" translate="label" type="text" sortOrder="13" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>ePay Google Pay</label>
+                <field id="active" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1"><label>Enabled</label><comment>Enable Google Pay as a separate checkout payment method.</comment><source_model>Magento\Config\Model\Config\Source\Yesno</source_model></field>
+                <field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1"><label>Title</label></field>
+                <field id="description" translate="label comment" type="textarea" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1"><label>Description</label><comment>The description displayed below the payment method title in checkout.</comment></field>
+                <field id="sort_order" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1"><label>Sort Order</label></field>
+                <field id="allowspecific" translate="label" type="allowspecific" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1"><label>Payment from Applicable Countries</label><source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model></field>
+                <field id="specificcountry" translate="label" type="multiselect" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1"><label>Payment from Specific Countries</label><source_model>Magento\Directory\Model\Config\Source\Country</source_model><can_be_empty>1</can_be_empty><depends><field id="allowspecific">1</field></depends></field>
+                <field id="allowed_currencies" translate="label comment" type="multiselect" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1"><label>Allowed Currencies</label><comment>Leave empty to allow all currencies.</comment><source_model>Magento\Config\Model\Config\Source\Locale\Currency</source_model><can_be_empty>1</can_be_empty></field>
+            </group>
+            <group id="epayepicpayment_klarna" translate="label" type="text" sortOrder="14" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>ePay Klarna</label>
+                <field id="active" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1"><label>Enabled</label><comment>Enable Klarna as a separate checkout payment method.</comment><source_model>Magento\Config\Model\Config\Source\Yesno</source_model></field>
+                <field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1"><label>Title</label></field>
+                <field id="description" translate="label comment" type="textarea" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1"><label>Description</label><comment>The description displayed below the payment method title in checkout.</comment></field>
+                <field id="sort_order" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1"><label>Sort Order</label></field>
+                <field id="allowspecific" translate="label" type="allowspecific" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1"><label>Payment from Applicable Countries</label><source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model></field>
+                <field id="specificcountry" translate="label" type="multiselect" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1"><label>Payment from Specific Countries</label><source_model>Magento\Directory\Model\Config\Source\Country</source_model><can_be_empty>1</can_be_empty><depends><field id="allowspecific">1</field></depends></field>
+                <field id="allowed_currencies" translate="label comment" type="multiselect" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1"><label>Allowed Currencies</label><comment>Leave empty to allow all currencies.</comment><source_model>Magento\Config\Model\Config\Source\Locale\Currency</source_model><can_be_empty>1</can_be_empty></field>
+            </group>
+            <group id="epayepicpayment_mobilepay" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>ePay MobilePay</label>
+                <field id="active" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enabled</label>
+                    <comment>Enable MobilePay as a separate checkout payment method.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1"><label>Title</label></field>
+                <field id="description" translate="label comment" type="textarea" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1"><label>Description</label><comment>The description displayed below the payment method title in checkout.</comment></field>
+                <field id="sort_order" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1"><label>Sort Order</label></field>
+                <field id="allowspecific" translate="label" type="allowspecific" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1"><label>Payment from Applicable Countries</label><source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model></field>
+                <field id="specificcountry" translate="label" type="multiselect" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1"><label>Payment from Specific Countries</label><source_model>Magento\Directory\Model\Config\Source\Country</source_model><can_be_empty>1</can_be_empty><depends><field id="allowspecific">1</field></depends></field>
+                <field id="allowed_currencies" translate="label comment" type="multiselect" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1"><label>Allowed Currencies</label><comment>Leave empty to allow all currencies.</comment><source_model>Magento\Config\Model\Config\Source\Locale\Currency</source_model><can_be_empty>1</can_be_empty></field>
+            </group>
+            <group id="epayepicpayment_swish" translate="label" type="text" sortOrder="16" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>ePay Swish</label>
+                <field id="active" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1"><label>Enabled</label><comment>Enable Swish as a separate checkout payment method.</comment><source_model>Magento\Config\Model\Config\Source\Yesno</source_model></field>
+                <field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1"><label>Title</label></field>
+                <field id="description" translate="label comment" type="textarea" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1"><label>Description</label><comment>The description displayed below the payment method title in checkout.</comment></field>
+                <field id="sort_order" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1"><label>Sort Order</label></field>
+                <field id="allowspecific" translate="label" type="allowspecific" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1"><label>Payment from Applicable Countries</label><source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model></field>
+                <field id="specificcountry" translate="label" type="multiselect" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1"><label>Payment from Specific Countries</label><source_model>Magento\Directory\Model\Config\Source\Country</source_model><can_be_empty>1</can_be_empty><depends><field id="allowspecific">1</field></depends></field>
+                <field id="allowed_currencies" translate="label comment" type="multiselect" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1"><label>Allowed Currencies</label><comment>Leave empty to allow all currencies.</comment><source_model>Magento\Config\Model\Config\Source\Locale\Currency</source_model><can_be_empty>1</can_be_empty></field>
+            </group>
+            <group id="epayepicpayment_viabill" translate="label" type="text" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>ePay ViaBill</label>
+                <field id="active" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1"><label>Enabled</label><comment>Enable ViaBill as a separate checkout payment method.</comment><source_model>Magento\Config\Model\Config\Source\Yesno</source_model></field>
+                <field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1"><label>Title</label></field>
+                <field id="description" translate="label comment" type="textarea" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1"><label>Description</label><comment>The description displayed below the payment method title in checkout.</comment></field>
+                <field id="sort_order" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1"><label>Sort Order</label></field>
+                <field id="allowspecific" translate="label" type="allowspecific" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1"><label>Payment from Applicable Countries</label><source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model></field>
+                <field id="specificcountry" translate="label" type="multiselect" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1"><label>Payment from Specific Countries</label><source_model>Magento\Directory\Model\Config\Source\Country</source_model><can_be_empty>1</can_be_empty><depends><field id="allowspecific">1</field></depends></field>
+                <field id="allowed_currencies" translate="label comment" type="multiselect" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1"><label>Allowed Currencies</label><comment>Leave empty to allow all currencies.</comment><source_model>Magento\Config\Model\Config\Source\Locale\Currency</source_model><can_be_empty>1</can_be_empty></field>
+            </group>
+        </section>
+    </system>
+</config>
