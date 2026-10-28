@@ -10,7 +10,7 @@ sync-github:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
   script:
     - test -n "$GITHUB_MIRROR_TOKEN" || { echo "GITHUB_MIRROR_TOKEN mangler"; exit 1; }
-    - git clone --mirror "$CI_REPOSITORY_URL" repository.git
+    - git -c http.sslCAInfo="$CI_SERVER_TLS_CA_FILE" clone --mirror "$CI_REPOSITORY_URL" repository.git
     - cd repository.git
     - git remote add github "https://x-access-token:${GITHUB_MIRROR_TOKEN}@github.com/ePay/magento2-epic-payment-module.git"
     - git push --mirror github
