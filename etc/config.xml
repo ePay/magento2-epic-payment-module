@@ -16,6 +16,8 @@
                 <can_authorize>1</can_authorize>
                 <can_capture>1</can_capture>
                 <can_use_checkout>1</can_use_checkout>
+                <addsurchargetopayment>1</addsurchargetopayment>
+                <surchargemode>surcharge_order_line</surchargemode>
             </epayepicpayment>
             <epayepicpayment_anyday>
                 <active>0</active>
