@@ -1,6 +1,6 @@
 # ePay Payment Solutions - Gateway for Magento 2
 
-**Version:** 4.0.33
+**Version:** 4.0.34
 **License:** MIT
 
 Integrates the ePay payment gateway with Magento 2.
@@ -83,6 +83,10 @@ All payment transactions are handled by ePay Payment Solutions.
 - Service API endpoint: <https://payments.epay.eu>
 
 ## Changelog
+
+### 4.0.34
+
+- Added the option to retain an authorized payment when an order is edited, with a secure admin action to move it to the edited order.
 
 ### 4.0.33
 
