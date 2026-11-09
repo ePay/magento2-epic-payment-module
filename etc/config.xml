@@ -18,6 +18,7 @@
                 <can_use_checkout>1</can_use_checkout>
                 <addsurchargetopayment>1</addsurchargetopayment>
                 <surchargemode>surcharge_order_line</surchargemode>
+                <keep_payment_onedit>0</keep_payment_onedit>
             </epayepicpayment>
             <epayepicpayment_anyday>
                 <active>0</active>

@@ -4,5 +4,7 @@
     <type name="Magento\Sales\Block\Adminhtml\Order\View">
         <plugin name="epayepicpayment_add_payment_link_button"
                 type="Epay\Magento2EpicPaymentModule\Plugin\Adminhtml\AddPaymentLinkButton"/>
+        <plugin name="epayepicpayment_add_move_payment_button"
+                type="Epay\Magento2EpicPaymentModule\Plugin\Adminhtml\AddMovePaymentButton"/>
     </type>
 </config>
