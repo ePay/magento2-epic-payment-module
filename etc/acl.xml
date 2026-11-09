@@ -9,6 +9,7 @@
                         <resource id="Magento_Sales::sales_order">
                             <resource id="Magento_Sales::actions">
                                 <resource id="Epay_Magento2EpicPaymentModule::create_payment_link" title="Create ePay payment links" sortOrder="10"/>
+                                <resource id="Epay_Magento2EpicPaymentModule::move_payment" title="Move ePay payments to edited orders" sortOrder="20"/>
                             </resource>
                         </resource>
                     </resource>

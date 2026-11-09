@@ -7,6 +7,7 @@ use Epay\Magento2EpicPaymentModule\Model\Payment\EpayHandler;
 use Magento\Framework\Api\AttributeValueFactory;
 use Magento\Framework\Api\ExtensionAttributesFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
@@ -14,6 +15,7 @@ use Magento\Framework\Registry;
 use Magento\Payment\Helper\Data as PaymentHelper;
 use Magento\Payment\Model\Method\AbstractMethod;
 use Magento\Payment\Model\Method\Logger as MethodLogger;
+use Magento\Framework\Message\ManagerInterface;
 use Magento\Sales\Model\Order\Payment\Transaction as PaymentTransaction;
 use Magento\Store\Model\ScopeInterface;
 use Psr\Log\LoggerInterface;
@@ -35,6 +37,8 @@ abstract class AbstractPaymentMethod extends AbstractMethod
 
     private EpayHandler $epayHandler;
     private LoggerInterface $psrLogger;
+    private RequestInterface $request;
+    private ManagerInterface $messageManager;
     protected ScopeConfigInterface $scopeConfig;
 
     public function __construct(
@@ -47,6 +51,8 @@ abstract class AbstractPaymentMethod extends AbstractMethod
         MethodLogger $methodLogger,
         EpayHandler $epayHandler,
         LoggerInterface $psrLogger,
+        RequestInterface $request,
+        ManagerInterface $messageManager,
         ?AbstractResource $resource = null,
         ?AbstractDb $resourceCollection = null,
         array $data = []
@@ -58,6 +64,8 @@ abstract class AbstractPaymentMethod extends AbstractMethod
         $this->epayHandler = $epayHandler;
         $this->epayHandler->setAuthData($apikey);
         $this->psrLogger = $psrLogger;
+        $this->request = $request;
+        $this->messageManager = $messageManager;
     }
 
     public function initialize($paymentAction, $stateObject)
@@ -131,7 +139,29 @@ abstract class AbstractPaymentMethod extends AbstractMethod
 
     public function cancel(\Magento\Payment\Model\InfoInterface $payment): self
     {
+        $order = $payment->getOrder();
+        if (
+            $this->request->getActionName() === 'save'
+            && $order
+            && $this->scopeConfig->isSetFlag(
+                'payment/' . self::SHARED_CONFIG_CODE . '/keep_payment_onedit',
+                ScopeInterface::SCOPE_STORE,
+                (int)$order->getStoreId()
+            )
+        ) {
+            $this->messageManager->addSuccessMessage(
+                __('The ePay payment was kept for order #%1.', $order->getIncrementId())
+            );
+
+            return $this;
+        }
+
         return $this->void($payment);
+    }
+
+    public function canEdit(): bool
+    {
+        return true;
     }
 
     public function void(\Magento\Payment\Model\InfoInterface $payment): self
