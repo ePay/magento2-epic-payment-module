@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace Epay\Magento2EpicPaymentModule\Controller\Payment;
 
 use Epay\Magento2EpicPaymentModule\Helper\EpayPaymentHelper;
+use Epay\Magento2EpicPaymentModule\Model\Config\Source\SurchargeMode;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\CsrfAwareActionInterface;
@@ -12,6 +13,7 @@ use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order\ItemFactory;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
@@ -27,6 +29,7 @@ class Callback extends Action implements CsrfAwareActionInterface
     private EpayPaymentHelper $epayPaymentHelper;
     private ScopeConfigInterface $scopeConfig;
     private SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory;
+    private ItemFactory $orderItemFactory;
 
     public function __construct(
         Context $context,
@@ -36,7 +39,8 @@ class Callback extends Action implements CsrfAwareActionInterface
         LoggerInterface $logger,
         EpayPaymentHelper $epayPaymentHelper,
         ScopeConfigInterface $scopeConfig,
-        SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory
+        SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory,
+        ItemFactory $orderItemFactory
     ) {
         parent::__construct($context);
         $this->checkoutSession = $checkoutSession;
@@ -46,6 +50,7 @@ class Callback extends Action implements CsrfAwareActionInterface
         $this->epayPaymentHelper = $epayPaymentHelper;
         $this->scopeConfig = $scopeConfig;
         $this->searchCriteriaBuilderFactory = $searchCriteriaBuilderFactory;
+        $this->orderItemFactory = $orderItemFactory;
     }
 
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
@@ -279,8 +284,17 @@ class Callback extends Action implements CsrfAwareActionInterface
     ): void {
         $feeInMinorUnits = (int)($postData['transaction']['fee'] ?? 0);
         $transactionCurrency = (string)($postData['transaction']['currency'] ?? '');
+        $storeId = (int)$order->getStoreId();
 
-        if ($feeInMinorUnits <= 0 || $transactionCurrency !== (string)$order->getOrderCurrencyCode()) {
+        if (
+            $feeInMinorUnits <= 0
+            || $transactionCurrency !== (string)$order->getOrderCurrencyCode()
+            || !$this->scopeConfig->isSetFlag(
+                'payment/epayepicpayment/addsurchargetopayment',
+                ScopeInterface::SCOPE_STORE,
+                $storeId
+            )
+        ) {
             return;
         }
 
@@ -311,15 +325,69 @@ class Callback extends Action implements CsrfAwareActionInterface
             $baseFeeAmount = round($feeAmount / $rate, 4);
         }
 
+        $surchargeMode = (string)$this->scopeConfig->getValue(
+            'payment/epayepicpayment/surchargemode',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+
+        if ($surchargeMode === SurchargeMode::SHIPPING) {
+            $this->addSurchargeToShipping($order, $baseFeeAmount, $feeAmount);
+        } else {
+            $this->addSurchargeOrderItem($order, $baseFeeAmount, $feeAmount);
+            $surchargeMode = SurchargeMode::ORDER_LINE;
+        }
+
         $order->setGrandTotal((float)$order->getGrandTotal() + $feeAmount)
             ->setTotalDue((float)$order->getTotalDue() + $feeAmount)
             ->setBaseGrandTotal((float)$order->getBaseGrandTotal() + $baseFeeAmount)
             ->setBaseTotalDue((float)$order->getBaseTotalDue() + $baseFeeAmount);
         $payment->setAdditionalInformation('epay_card_fee_amount', $feeAmount);
         $payment->setAdditionalInformation('epay_card_fee_currency', $transactionCurrency);
+        $payment->setAdditionalInformation('epay_card_fee_mode', $surchargeMode);
         $order->addCommentToStatusHistory(
             __('ePay card fee added: %1 %2.', number_format($feeAmount, 2, '.', ''), $transactionCurrency)
         );
+    }
+
+    private function addSurchargeOrderItem(
+        \Magento\Sales\Api\Data\OrderInterface $order,
+        float $baseFeeAmount,
+        float $feeAmount
+    ): void {
+        $feeItem = $this->orderItemFactory->create();
+        $feeItem->setSku('epay_surcharge_fee')
+            ->setName((string)__('Surcharge fee'))
+            ->setQtyOrdered(1)
+            ->setProductType(\Magento\Catalog\Model\Product\Type::TYPE_VIRTUAL)
+            ->setIsVirtual(1)
+            ->setBasePrice($baseFeeAmount)
+            ->setBasePriceInclTax($baseFeeAmount)
+            ->setBaseOriginalPrice($baseFeeAmount)
+            ->setBaseRowTotal($baseFeeAmount)
+            ->setBaseRowTotalInclTax($baseFeeAmount)
+            ->setPrice($feeAmount)
+            ->setPriceInclTax($feeAmount)
+            ->setOriginalPrice($feeAmount)
+            ->setRowTotal($feeAmount)
+            ->setRowTotalInclTax($feeAmount);
+
+        $order->addItem($feeItem);
+        $order->setBaseSubtotal((float)$order->getBaseSubtotal() + $baseFeeAmount)
+            ->setBaseSubtotalInclTax((float)$order->getBaseSubtotalInclTax() + $baseFeeAmount)
+            ->setSubtotal((float)$order->getSubtotal() + $feeAmount)
+            ->setSubtotalInclTax((float)$order->getSubtotalInclTax() + $feeAmount);
+    }
+
+    private function addSurchargeToShipping(
+        \Magento\Sales\Api\Data\OrderInterface $order,
+        float $baseFeeAmount,
+        float $feeAmount
+    ): void {
+        $order->setBaseShippingAmount((float)$order->getBaseShippingAmount() + $baseFeeAmount)
+            ->setBaseShippingInclTax((float)$order->getBaseShippingInclTax() + $baseFeeAmount)
+            ->setShippingAmount((float)$order->getShippingAmount() + $feeAmount)
+            ->setShippingInclTax((float)$order->getShippingInclTax() + $feeAmount);
     }
     private function getOrderByIncrementId(string $incrementId): \Magento\Sales\Api\Data\OrderInterface
     {
