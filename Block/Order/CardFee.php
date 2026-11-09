@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Epay\Magento2EpicPaymentModule\Block\Order;
 
+use Epay\Magento2EpicPaymentModule\Model\Config\Source\SurchargeMode;
 use Magento\Framework\DataObject;
 use Magento\Framework\View\Element\Template;
 
@@ -18,8 +19,13 @@ class CardFee extends Template
         $order = $totalsBlock->getOrder();
         $payment = $order ? $order->getPayment() : null;
         $feeAmount = $payment ? (float)$payment->getAdditionalInformation('epay_card_fee_amount') : 0.0;
+        $feeMode = $payment ? (string)$payment->getAdditionalInformation('epay_card_fee_mode') : '';
 
-        if ($feeAmount <= 0.0) {
+        if (
+            $feeAmount <= 0.0
+            || $feeMode === SurchargeMode::ORDER_LINE
+            || $feeMode === SurchargeMode::SHIPPING
+        ) {
             return $this;
         }
 

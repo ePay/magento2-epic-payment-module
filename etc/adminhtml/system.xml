@@ -47,12 +47,25 @@
                     <comment>Collect invoice data and send to the payment window</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="orderStatusAfterCancelPayment" type="select" translate="label comment" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="addsurchargetopayment" type="select" translate="label comment" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Surcharge fee:</label>
+                    <comment>Enable to add the ePay surcharge fee to the order.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="surchargemode" type="select" translate="label comment" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Surcharge mode:</label>
+                    <comment>Select whether the surcharge is added as an order line or to shipping &amp; handling.</comment>
+                    <source_model>Epay\Magento2EpicPaymentModule\Model\Config\Source\SurchargeMode</source_model>
+                    <depends>
+                        <field id="addsurchargetopayment">1</field>
+                    </depends>
+                </field>
+                <field id="orderStatusAfterCancelPayment" type="select" translate="label comment" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Order Status After Canceled Payment:</label>
                     <comment>The order status after payment is canceled</comment>
                     <source_model>Epay\Magento2EpicPaymentModule\Model\Config\Source\PendingCanceledStatus</source_model>
                 </field>
-                <field id="ageverificationmode" type="select" translate="label comment" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="ageverificationmode" type="select" translate="label comment" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Ageverification mode:</label>
                     <comment>Activate Ageverification></comment>
                     <source_model>Epay\Magento2EpicPaymentModule\Model\Config\Source\Ageverificationmode</source_model>

@@ -1,6 +1,6 @@
 # ePay Payment Solutions - Gateway for Magento 2
 
-**Version:** 4.0.32
+**Version:** 4.0.33
 **License:** MIT
 
 Integrates the ePay payment gateway with Magento 2.
@@ -21,6 +21,7 @@ With ePay Payment Solutions for Magento 2, merchants can offer the ePay payment 
 - Configure checkout card logos without changing the payment methods accepted by the merchant.
 - Optionally send customer, invoice, and order-line data to the payment window.
 - Support instant capture when the goods are supplied immediately.
+- Configure whether ePay surcharge fees are added as an order line or to shipping & handling.
 - Restore the customer's cart after a cancelled or failed payment when possible.
 - Support optional age verification based on product and category configuration.
 
@@ -82,6 +83,10 @@ All payment transactions are handled by ePay Payment Solutions.
 - Service API endpoint: <https://payments.epay.eu>
 
 ## Changelog
+
+### 4.0.33
+
+- Added configurable surcharge-fee handling, including order-line and shipping modes.
 
 ### 4.0.32
 
