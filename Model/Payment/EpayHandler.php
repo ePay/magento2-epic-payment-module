@@ -1,19 +1,28 @@
 <?php
+declare(strict_types=1);
+
 namespace Epay\Magento2EpicPaymentModule\Model\Payment;
 
 use Epay\Magento2EpicPaymentModule\Helper\EpayPaymentHelper;
+use Magento\Framework\Exception\LocalizedException;
+use Psr\Log\LoggerInterface;
 
-class EpayHandler {
+class EpayHandler
+{
+    private const CONNECT_TIMEOUT_SECONDS = 10;
+    private const REQUEST_TIMEOUT_SECONDS = 30;
 
     private $epay_apikey;
     private $epay_pos;
     private $base_url;
     private EpayPaymentHelper $epayPaymentHelper;
+    private LoggerInterface $logger;
 
-    public function __construct(EpayPaymentHelper $epayPaymentHelper)
+    public function __construct(EpayPaymentHelper $epayPaymentHelper, LoggerInterface $logger)
     {
         $this->base_url = "https://payments.epay.eu";
         $this->epayPaymentHelper = $epayPaymentHelper;
+        $this->logger = $logger;
     }
 
     public function setAuthData($apikey, $posid=null)
@@ -92,9 +101,10 @@ class EpayHandler {
 
         $endpoint_URL = $this->base_url."/public/api/v1/transactions/".$transactionId."/capture";
         
-        $result = $this->post($endpoint_URL, $ePayParameters);
-
-        return $result;
+        return $this->requireSuccessfulOperation(
+            $this->post($endpoint_URL, $ePayParameters, [], 'capture'),
+            'capture'
+        );
     }
 
     public function refund($transactionId, $amount)
@@ -105,9 +115,10 @@ class EpayHandler {
 
         $endpoint_URL = $this->base_url."/public/api/v1/transactions/".$transactionId."/refund";
         
-        $result = $this->post($endpoint_URL, $ePayParameters);
-
-        return $result;
+        return $this->requireSuccessfulOperation(
+            $this->post($endpoint_URL, $ePayParameters, [], 'refund'),
+            'refund'
+        );
     }
 
     public function void($transactionId, $amount=null)
@@ -118,9 +129,10 @@ class EpayHandler {
 
         $endpoint_URL = $this->base_url."/public/api/v1/transactions/".$transactionId."/void";
         
-        $result = $this->post($endpoint_URL, $ePayParameters);
-
-        return $result;
+        return $this->requireSuccessfulOperation(
+            $this->post($endpoint_URL, $ePayParameters, [], 'void'),
+            'void'
+        );
     }
 
     public function delete_subscription($subscription_id)
@@ -177,11 +189,17 @@ class EpayHandler {
         return $result;
     }
 
-    private function post($endpoint_URL, array $data, array $additionalHeaders = [])
+    private function post(string $endpointUrl, array $data, array $additionalHeaders = [], string $operation = 'request'): string
     {
         $jsonData = json_encode($data);
+        if ($jsonData === false) {
+            throw new LocalizedException(__('The ePay request could not be prepared.'));
+        }
 
-        $ch = curl_init($endpoint_URL);
+        $ch = curl_init($endpointUrl);
+        if ($ch === false) {
+            throw new LocalizedException(__('The ePay connection could not be initialized.'));
+        }
 
         $headers = [
             'Accept: application/json',
@@ -197,16 +215,44 @@ class EpayHandler {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, self::CONNECT_TIMEOUT_SECONDS);
+        curl_setopt($ch, CURLOPT_TIMEOUT, self::REQUEST_TIMEOUT_SECONDS);
 
         $result = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($http_code == 200) {
-            return $result;
-        } else {
-            return $result;
+        if ($result === false) {
+            $this->logger->error('ePay request failed before receiving a response', [
+                'operation' => $operation,
+                'curl_error' => $curlError,
+            ]);
+            throw new LocalizedException(__('The ePay request failed. Verify the payment status before trying again.'));
         }
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            $this->logger->error('ePay request returned an unsuccessful HTTP status', [
+                'operation' => $operation,
+                'http_status' => $httpCode,
+            ]);
+            throw new LocalizedException(__('The ePay request was rejected.'));
+        }
+
+        return $result;
+    }
+
+    private function requireSuccessfulOperation(string $response, string $operation): string
+    {
+        $data = json_decode($response, true);
+        if (!is_array($data) || !array_key_exists('success', $data) || $data['success'] !== true) {
+            $this->logger->error('ePay operation returned an unsuccessful response', [
+                'operation' => $operation,
+            ]);
+            throw new LocalizedException(__('The ePay %1 operation was not completed.', $operation));
+        }
+
+        return $response;
     }
 
     private function get($endpoint_URL)
