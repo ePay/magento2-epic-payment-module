@@ -19,7 +19,6 @@
                 <addsurchargetopayment>1</addsurchargetopayment>
                 <surchargemode>surcharge_order_line</surchargemode>
                 <keep_payment_onedit>0</keep_payment_onedit>
-                <bnpl_warning_text>Advarsel! Lån med omtanke – det koster penge.</bnpl_warning_text>
             </epayepicpayment>
             <epayepicpayment_anyday>
                 <active>0</active>
