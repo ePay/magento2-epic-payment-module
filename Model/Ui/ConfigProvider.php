@@ -9,6 +9,12 @@ use Magento\Store\Model\ScopeInterface;
 
 class ConfigProvider implements ConfigProviderInterface
 {
+    private const BNPL_CODES = [
+        'epayepicpayment_anyday',
+        'epayepicpayment_klarna',
+        'epayepicpayment_viabill',
+    ];
+
     private const CODES = [
         'epayepicpayment',
         'epayepicpayment_anyday',
@@ -40,6 +46,10 @@ class ConfigProvider implements ConfigProviderInterface
     public function getConfig()
     {
         $paymentConfig = [];
+        $bnplWarningText = (string)$this->scopeConfig->getValue(
+            'payment/epayepicpayment/bnpl_warning_text',
+            ScopeInterface::SCOPE_STORE
+        );
         foreach (self::CODES as $code) {
             $paymentConfig[$code] = [
                 'description' => (string)$this->scopeConfig->getValue(
@@ -47,6 +57,9 @@ class ConfigProvider implements ConfigProviderInterface
                     ScopeInterface::SCOPE_STORE
                 ),
                 'logos' => $this->cardLogoProvider->getLogos($code),
+                'bnplWarningText' => $bnplWarningText,
+                'showBnplWarning' => in_array($code, self::BNPL_CODES, true)
+                    || ($code === 'epayepicpayment' && $this->cardLogoProvider->hasBnplLogo()),
                 'jsComponent' => 'Epay_Magento2EpicPaymentModule/js/view/payment/method-renderer/epayepicpayment',
                 'isActive' => true,
                 'redirectUrl' => $this->urlBuilder->getUrl(

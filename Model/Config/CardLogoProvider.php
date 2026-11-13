@@ -20,7 +20,12 @@ class CardLogoProvider
         'discover' => ['file' => 'discover.svg', 'alt' => 'Discover'],
         'jcb' => ['file' => 'jcb.svg', 'alt' => 'JCB'],
         'maestro' => ['file' => 'maestro.svg', 'alt' => 'Maestro'],
+        'anyday' => ['file' => 'anyday.svg', 'alt' => 'Anyday'],
+        'klarna' => ['file' => 'klarna.svg', 'alt' => 'Klarna'],
+        'viabill' => ['file' => 'viabill.svg', 'alt' => 'ViaBill'],
     ];
+
+    private const BNPL_LOGO_IDS = ['anyday', 'klarna', 'viabill'];
 
     private const PAYMENT_METHOD_LOGOS = [
         'epayepicpayment_anyday' => [['file' => 'anyday.svg', 'alt' => 'Anyday']],
@@ -58,6 +63,11 @@ class CardLogoProvider
         }
 
         return $this->resolveLogos(self::PAYMENT_METHOD_LOGOS[$paymentMethodCode] ?? []);
+    }
+
+    public function hasBnplLogo(): bool
+    {
+        return (bool)array_intersect(self::BNPL_LOGO_IDS, $this->getConfiguredCardLogoIds());
     }
 
     private function getConfiguredCardLogoIds(): array

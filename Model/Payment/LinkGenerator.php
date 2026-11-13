@@ -13,6 +13,12 @@ use Magento\Store\Model\ScopeInterface;
 
 class LinkGenerator
 {
+    private const BNPL_PAYMENT_METHODS = [
+        'epayepicpayment_anyday',
+        'epayepicpayment_klarna',
+        'epayepicpayment_viabill',
+    ];
+
     private const ALLOWED_PAYMENT_METHODS = [
         'epayepicpayment' => 'CARD',
         'epayepicpayment_anyday' => 'ANYDAY',
@@ -153,7 +159,7 @@ class LinkGenerator
             }
         }
 
-        if ($enableInvoiceData) {
+        if ($enableInvoiceData || $this->requiresInvoiceData($paymentMethodCode)) {
             $customerData = $this->epayPaymentHelper->createCustomerData($order);
             $orderLines = $this->epayPaymentHelper->createOrderLines($order);
         }
@@ -205,5 +211,10 @@ class LinkGenerator
         }
 
         return (string)$result->{$urlProperty};
+    }
+
+    private function requiresInvoiceData(string $paymentMethodCode): bool
+    {
+        return in_array($paymentMethodCode, self::BNPL_PAYMENT_METHODS, true);
     }
 }
