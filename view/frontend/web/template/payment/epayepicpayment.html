@@ -19,6 +19,10 @@
             <p class="epay-payment-method-description" data-bind="text: getDescription()"></p>
         </div>
 
+        <!-- ko if: showBnplWarning() -->
+        <p class="epay-bnpl-warning" data-bind="text: getBnplWarningText()"></p>
+        <!-- /ko -->
+
         <div class="checkout-agreements-block">
             <!-- ko foreach: $parent.getRegion('before-place-order') -->
             <!-- ko template: getTemplate() --><!-- /ko -->

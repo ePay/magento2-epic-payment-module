@@ -34,6 +34,16 @@ define([
             return this.getDescription().trim() !== '';
         },
 
+        getBnplWarningText: function () {
+            var config = window.checkoutConfig.payment[this.getCode()] || {};
+            return config.bnplWarningText || '';
+        },
+
+        showBnplWarning: function () {
+            var config = window.checkoutConfig.payment[this.getCode()] || {};
+            return Boolean(config.showBnplWarning && this.getBnplWarningText());
+        },
+
         getLogos: function () {
             var config = window.checkoutConfig.payment[this.getCode()] || {};
             return config.logos || [];
