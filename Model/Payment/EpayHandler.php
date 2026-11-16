@@ -221,7 +221,6 @@ class EpayHandler
         $result = curl_exec($ch);
         $curlError = curl_error($ch);
         $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         if ($result === false) {
             $this->logger->error('ePay request failed before receiving a response', [
@@ -270,7 +269,6 @@ class EpayHandler
         
         $result = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         if($http_code == "200")
         {
@@ -299,7 +297,6 @@ class EpayHandler
         
         $result = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         if($http_code == "200")
         {
