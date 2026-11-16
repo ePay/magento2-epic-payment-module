@@ -1,6 +1,6 @@
 # ePay Payment Solutions - Gateway for Magento 2
 
-**Version:** 4.0.38
+**Version:** 4.0.39
 **License:** MIT
 
 Integrates the ePay payment gateway with Magento 2.
@@ -84,6 +84,10 @@ All payment transactions are handled by ePay Payment Solutions.
 - Service API endpoint: <https://payments.epay.eu>
 
 ## Changelog
+
+### 4.0.39
+
+- Prevented MSI inventory processing from resolving the synthetic surcharge order line as a catalog product when saving an invoice.
 
 ### 4.0.38
 

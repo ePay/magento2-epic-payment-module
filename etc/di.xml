@@ -45,4 +45,8 @@
             </argument>
         </arguments>
     </type>
+    <type name="Magento\InventorySales\Model\GetSkuFromOrderItem">
+        <plugin name="epayepicpayment_skip_surcharge_inventory_lookup"
+                type="Epay\Magento2EpicPaymentModule\Plugin\Inventory\SkipSurchargeSkuLookup"/>
+    </type>
 </config>
