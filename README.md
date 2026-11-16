@@ -1,6 +1,6 @@
 # ePay Payment Solutions - Gateway for Magento 2
 
-**Version:** 4.0.35
+**Version:** 4.0.37
 **License:** MIT
 
 Integrates the ePay payment gateway with Magento 2.
@@ -19,7 +19,8 @@ With ePay Payment Solutions for Magento 2, merchants can offer the ePay payment 
 - Offer Anyday, Apple Pay, Google Pay, Klarna, MobilePay, Swish, and ViaBill as separate checkout payment methods.
 - Configure payment-method availability by country and currency.
 - Configure checkout card logos without changing the payment methods accepted by the merchant.
-- Optionally send customer, invoice, and order-line data to the payment window.
+- Optionally send customer, invoice, and order-line data to the payment window; this data is always sent for Anyday, Klarna, and ViaBill.
+- Display a configurable consumer-credit warning for Anyday, Klarna, and ViaBill.
 - Support instant capture when the goods are supplied immediately.
 - Configure whether ePay surcharge fees are added as an order line or to shipping & handling.
 - Restore the customer's cart after a cancelled or failed payment when possible.
@@ -83,6 +84,15 @@ All payment transactions are handled by ePay Payment Solutions.
 - Service API endpoint: <https://payments.epay.eu>
 
 ## Changelog
+
+### 4.0.37
+
+- Updated the visual prominence of the configurable BNPL warning text in Luma checkout.
+
+### 4.0.36
+
+- Added mandatory invoice data and a configurable consumer-credit warning for Anyday, Klarna, and ViaBill payments.
+- Improved Magento configuration guidance for ePay payment settings.
 
 ### 4.0.35
 
