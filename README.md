@@ -1,6 +1,6 @@
 # ePay Payment Solutions - Gateway for Magento 2
 
-**Version:** 4.0.36
+**Version:** 4.0.37
 **License:** MIT
 
 Integrates the ePay payment gateway with Magento 2.
@@ -84,6 +84,10 @@ All payment transactions are handled by ePay Payment Solutions.
 - Service API endpoint: <https://payments.epay.eu>
 
 ## Changelog
+
+### 4.0.37
+
+- Updated the visual prominence of the configurable BNPL warning text in Luma checkout.
 
 ### 4.0.36
 
