@@ -70,7 +70,11 @@ class Callback extends Action implements CsrfAwareActionInterface
         $postData = is_array($postData) ? $postData : [];
 
         $callbackOrder = null;
-        $reference = (string)($postData['transaction']['reference'] ?? '');
+        $reference = (string)(
+            $postData['transaction']['reference']
+            ?? $postData['session']['reference']
+            ?? ''
+        );
         if ($reference !== '') {
             try {
                 $callbackOrder = $this->getOrderByIncrementId($reference);
@@ -98,6 +102,7 @@ class Callback extends Action implements CsrfAwareActionInterface
             'reference' => $reference,
             'transaction_id' => $postData['transaction']['id'] ?? null,
             'state' => $postData['transaction']['state'] ?? null,
+            'session_state' => $postData['session']['state'] ?? null,
         ]);
 
         $responseBody = [
@@ -106,9 +111,12 @@ class Callback extends Action implements CsrfAwareActionInterface
         ];
 
         try {
-            $reference = $postData['transaction']['reference'] ?? '';
+            $reference = $postData['transaction']['reference']
+                ?? $postData['session']['reference']
+                ?? '';
             $transactionId = $postData['transaction']['id'] ?? null;
             $state = $postData['transaction']['state'] ?? null;
+            $sessionState = $postData['session']['state'] ?? null;
             $errorCode = $postData['transaction']['errorCode'] ?? null;
             $instantCapture = ($postData['transaction']['instantCapture'] ?? '') === 'NO_VOID';
 
@@ -204,6 +212,14 @@ class Callback extends Action implements CsrfAwareActionInterface
                         $this->orderRepository->save($order);
                     }
                 }
+            } elseif ($sessionState === 'EXPIRED') {
+                $order = $callbackOrder ?: $this->getOrderByIncrementId((string)$reference);
+                $sessionExpired = $this->handleExpiredSession($order);
+
+                $responseBody['message'] = $sessionExpired
+                    ? 'Payment session expired'
+                    : 'Payment session expiration already processed';
+                $responseBody['orderStateChanged'] = $sessionExpired;
             } else {
                 $responseBody['orderStateChanged'] = false;
                 $responseBody['message'] = $errorCode;
@@ -223,6 +239,31 @@ class Callback extends Action implements CsrfAwareActionInterface
             ->setHeader('X-EPay-System', $this->epayPaymentHelper->getModuleHeaderInfo(), true)
             ->setStatusCode(200)
             ->setBody(json_encode($responseBody));
+    }
+
+    private function handleExpiredSession(\Magento\Sales\Api\Data\OrderInterface $order): bool
+    {
+        $payment = $order->getPayment();
+        if ((bool)$payment->getAdditionalInformation('epay_session_expired')) {
+            return false;
+        }
+
+        $payment->setAdditionalInformation('epay_session_expired', true);
+        $order->addCommentToStatusHistory(__('ePay payment session expired.'));
+
+        $orderStatusAfterCancelPayment = (string)$this->scopeConfig->getValue(
+            'payment/epayepicpayment/orderStatusAfterCancelPayment',
+            ScopeInterface::SCOPE_STORE,
+            (int)$order->getStoreId()
+        );
+
+        if ($orderStatusAfterCancelPayment === 'canceled' && $order->canCancel()) {
+            $order->cancel();
+        }
+
+        $this->orderRepository->save($order);
+
+        return true;
     }
 
     private function validateWebhookAuth(?int $storeId): ?array
