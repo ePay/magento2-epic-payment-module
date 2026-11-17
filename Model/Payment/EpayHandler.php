@@ -42,6 +42,7 @@ class EpayHandler
             "timeout" => 120,
             "instantCapture" => $instantCapture,
             "maxAttempts" => 5,
+            "reportExpired" => true,
             "notificationUrl" => $notificationUrl,
             "successUrl" => $successUrl,
             "returnUrl" => $returnUrl,

@@ -1,6 +1,6 @@
 # ePay Payment Solutions - Gateway for Magento 2
 
-**Version:** 4.0.39
+**Version:** 4.0.40
 **License:** MIT
 
 Integrates the ePay payment gateway with Magento 2.
@@ -84,6 +84,10 @@ All payment transactions are handled by ePay Payment Solutions.
 - Service API endpoint: <https://payments.epay.eu>
 
 ## Changelog
+
+### 4.0.40
+
+- Report expired ePay payment sessions to Magento and handle the final session state without treating failed retryable attempts as canceled orders.
 
 ### 4.0.39
 
